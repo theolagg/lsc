@@ -187,86 +187,8 @@ gtag('consent', 'default', {
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-KHBVJ47Q');</script>
+})(window,document,'script','dataLayer','');</script>
 <!-- End Google Tag Manager -->
 <?php
 };
-
-add_action('wp_enqueue_scripts', function () {
-    wp_enqueue_script('imagesloaded');
-    wp_enqueue_script('masonry');
-});
-
-
-
-// Disable comments everywhere
-add_action('admin_init', function () {
-    global $pagenow;
-    if ($pagenow === 'edit-comments.php') {
-        wp_redirect(admin_url());
-        exit;
-    }
-    remove_meta_box('dashboard_recent_comments', 'dashboard', 'normal');
-});
-add_filter('comments_open', '__return_false', 20, 2);
-add_filter('pings_open', '__return_false', 20, 2);
-add_filter('comments_array', '__return_empty_array', 10, 2);
-
-
-
-/**
- * Add the post type archive crumb for specific CPT singles.
- * Works for CPT slugs "industry" and "solution".
- */
-add_filter( 'wpseo_breadcrumb_links', function( $links ) {
-
-    $targets = [ 'industry', 'solution' ]; // CPT slugs to fix
-
-    if ( is_singular( $targets ) ) {
-        $pt   = get_post_type();
-        $obj  = get_post_type_object( $pt );
-
-        // Archive URL (fallback to /{slug}/ if has_archive is false)
-        $archive_url = get_post_type_archive_link( $pt );
-        if ( ! $archive_url ) {
-            $archive_url = home_url( '/' . $pt . '/' );
-        }
-
-        // Nice label (CPT label if set, else slug ucfirst)
-        $label = $obj && ! empty( $obj->labels->name ) ? $obj->labels->name : ucfirst( $pt );
-
-        // Avoid inserting if it's already there
-        $exists = false;
-        foreach ( $links as $l ) {
-            if ( isset( $l['url'] ) && untrailingslashit( $l['url'] ) === untrailingslashit( $archive_url ) ) {
-                $exists = true;
-                break;
-            }
-        }
-
-        if ( ! $exists ) {
-            // Insert right after "Home"
-            array_splice( $links, 1, 0, [[
-                'url'  => $archive_url,
-                'text' => $label,
-            ]] );
-        }
-    }
-
-    // Optional: ensure archive pages themselves show the archive label
-    if ( is_post_type_archive( $targets ) ) {
-        $pt   = get_query_var( 'post_type' );
-        if ( is_array( $pt ) ) { $pt = reset( $pt ); }
-        $obj  = get_post_type_object( $pt );
-        $label = $obj && ! empty( $obj->labels->name ) ? $obj->labels->name : ucfirst( (string) $pt );
-
-        // Replace the last crumb's text with the CPT label if needed
-        $last = count( $links ) - 1;
-        if ( isset( $links[ $last ]['text'] ) ) {
-            $links[ $last ]['text'] = $label;
-        }
-    }
-
-    return $links;
-} );
 
