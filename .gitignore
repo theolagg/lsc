@@ -1,0 +1,23 @@
+# OS / editor
+.DS_Store
+.vscode/
+
+# Env
+.env
+.env.local
+
+# Docker data
+db_data/
+mysql/
+mariadb/
+
+# WordPress uploads / cache
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+
+# Node
+node_modules/
+
+# Logs
+*.log
