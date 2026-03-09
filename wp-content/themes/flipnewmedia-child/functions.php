@@ -263,3 +263,86 @@ function fnm_normalize_content_urls( $content ) {
 	);
 }
 add_filter( 'the_content', 'fnm_normalize_content_urls', 20 );
+
+/**
+ * Build a safe return URL for footer forms.
+ */
+function lsc_footer_return_url() {
+	$referer = wp_get_referer();
+	$target  = $referer ? $referer : home_url( '/' );
+	return add_query_arg(
+		array(
+			'lsc_footer_status' => null,
+			'lsc_footer_form'   => null,
+		),
+		$target
+	) . '#contact-footer';
+}
+
+function lsc_footer_redirect_with_status( $status, $form ) {
+	$url = add_query_arg(
+		array(
+			'lsc_footer_status' => sanitize_key( $status ),
+			'lsc_footer_form'   => sanitize_key( $form ),
+		),
+		lsc_footer_return_url()
+	);
+
+	wp_safe_redirect( $url );
+	exit;
+}
+
+function lsc_footer_handle_newsletter_submit() {
+	if ( ! isset( $_POST['lsc_footer_newsletter_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsc_footer_newsletter_nonce'] ) ), 'lsc_footer_newsletter_submit' ) ) {
+		lsc_footer_redirect_with_status( 'error', 'newsletter' );
+	}
+
+	$email = isset( $_POST['newsletter_email'] ) ? sanitize_email( wp_unslash( $_POST['newsletter_email'] ) ) : '';
+	$terms = isset( $_POST['newsletter_terms'] ) ? sanitize_text_field( wp_unslash( $_POST['newsletter_terms'] ) ) : '';
+
+	if ( empty( $email ) || ! is_email( $email ) || '1' !== $terms ) {
+		lsc_footer_redirect_with_status( 'error', 'newsletter' );
+	}
+
+	$to      = get_option( 'admin_email' );
+	$subject = sprintf( '[%s] Newsletter Signup', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) );
+	$message = "New newsletter signup from footer:\n\nEmail: {$email}\n";
+	$headers = array( 'Reply-To: ' . $email );
+
+	$sent = wp_mail( $to, $subject, $message, $headers );
+
+	lsc_footer_redirect_with_status( $sent ? 'ok' : 'error', 'newsletter' );
+}
+add_action( 'admin_post_lsc_footer_newsletter_submit', 'lsc_footer_handle_newsletter_submit' );
+add_action( 'admin_post_nopriv_lsc_footer_newsletter_submit', 'lsc_footer_handle_newsletter_submit' );
+
+function lsc_footer_handle_contact_submit() {
+	if ( ! isset( $_POST['lsc_footer_contact_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsc_footer_contact_nonce'] ) ), 'lsc_footer_contact_submit' ) ) {
+		lsc_footer_redirect_with_status( 'error', 'contact' );
+	}
+
+	$full_name = isset( $_POST['full_name'] ) ? sanitize_text_field( wp_unslash( $_POST['full_name'] ) ) : '';
+	$phone     = isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '';
+	$email     = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+	$message   = isset( $_POST['message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message'] ) ) : '';
+	$terms     = isset( $_POST['contact_terms'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_terms'] ) ) : '';
+
+	if ( empty( $full_name ) || empty( $email ) || ! is_email( $email ) || '1' !== $terms ) {
+		lsc_footer_redirect_with_status( 'error', 'contact' );
+	}
+
+	$to          = get_option( 'admin_email' );
+	$mail_subject = sprintf( '[%s] Footer Contact Request', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) );
+	$mail_body    = "New contact request from footer:\n\n";
+	$mail_body   .= "Name: {$full_name}\n";
+	$mail_body   .= "Phone: {$phone}\n";
+	$mail_body   .= "Email: {$email}\n";
+	$mail_body   .= "Message:\n{$message}\n";
+	$headers      = array( 'Reply-To: ' . $email );
+
+	$sent = wp_mail( $to, $mail_subject, $mail_body, $headers );
+
+	lsc_footer_redirect_with_status( $sent ? 'ok' : 'error', 'contact' );
+}
+add_action( 'admin_post_lsc_footer_contact_submit', 'lsc_footer_handle_contact_submit' );
+add_action( 'admin_post_nopriv_lsc_footer_contact_submit', 'lsc_footer_handle_contact_submit' );
