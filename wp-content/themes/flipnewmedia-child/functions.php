@@ -157,6 +157,7 @@ add_filter( 'use_widgets_block_editor', '__return_false' );
 add_action('after_setup_theme', function () {
   register_nav_menus([
     'primary'               => __('Primary (Desktop)', 'flipnewmedia'),
+    'header_utility'        => __('Header Utility (Desktop Right)', 'flipnewmedia'),
     'offcanvas_left'        => __('Offcanvas Mobile - Left Column', 'flipnewmedia'),
     'offcanvas_right'       => __('Offcanvas Mobile - Right Column', 'flipnewmedia'),
   ]);
@@ -191,4 +192,3 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <?php
 };
-
