@@ -86,8 +86,123 @@ $solutions_cards = [
     'active' => false,
   ],
 ];
+
+$news_filters = [
+  'Όλα',
+  'Εκδηλώσεις',
+  'Νέα προϊόντα',
+  'Science Snap',
+];
+
+$news_cards = [
+  [
+    'title' => 'Lorem ipsum dolor sit amet, consectetur sum dolor sit amet, consectetur etur sum dolor sit amet, consectetur',
+    'url'   => '#',
+    'node'  => '695:98',
+    'size'  => 'featured',
+  ],
+  [
+    'title' => 'Lorem ipsum dolor sit amet, consectetur sum dolor sit amet, consectetur',
+    'url'   => '#',
+    'node'  => '695:107',
+    'size'  => 'regular',
+  ],
+  [
+    'title' => 'Lorem ipsum dolor sit amet, consectetur sum dolor sit amet, consectetur',
+    'url'   => '#',
+    'node'  => '695:116',
+    'size'  => 'regular',
+  ],
+];
+
+$news_query_builder = static function ( $category_id = 0 ) {
+  $args = [
+    'post_type'           => 'post',
+    'post_status'         => 'publish',
+    'posts_per_page'      => 3,
+    'ignore_sticky_posts' => true,
+  ];
+
+  if ( $category_id > 0 ) {
+    $args['cat'] = (int) $category_id;
+  }
+
+  $query = new WP_Query( $args );
+  $cards = [];
+
+  if ( $query->have_posts() ) {
+    while ( $query->have_posts() ) {
+      $query->the_post();
+
+      $excerpt = wp_strip_all_tags( get_the_excerpt() );
+      if ( '' === $excerpt ) {
+        $excerpt = get_the_title();
+      }
+
+      $cards[] = [
+        'url'     => get_permalink(),
+        'title'   => get_the_title(),
+        'excerpt' => wp_trim_words( $excerpt, 18, '...' ),
+        'image'   => get_the_post_thumbnail_url( get_the_ID(), 'large' ),
+      ];
+    }
+  }
+  wp_reset_postdata();
+
+  return $cards;
+};
+
+$news_terms = get_categories(
+  [
+    'taxonomy'   => 'category',
+    'hide_empty' => true,
+    'orderby'    => 'name',
+    'order'      => 'ASC',
+  ]
+);
+
+$news_tabs = [
+  [
+    'slug'  => 'all',
+    'label' => __( 'Όλα', 'flipnewmedia' ),
+  ],
+];
+
+if ( ! empty( $news_terms ) ) {
+  foreach ( $news_terms as $term ) {
+    $news_tabs[] = [
+      'slug'    => 'cat-' . (int) $term->term_id,
+      'label'   => $term->name,
+      'term_id' => (int) $term->term_id,
+    ];
+  }
+}
+
+$news_data_by_tab        = [];
+$news_data_by_tab['all'] = $news_query_builder();
+foreach ( $news_tabs as $tab ) {
+  if ( empty( $tab['term_id'] ) ) {
+    continue;
+  }
+  $news_data_by_tab[ $tab['slug'] ] = $news_query_builder( (int) $tab['term_id'] );
+}
+
+$news_cards = [];
+if ( ! empty( $news_data_by_tab['all'] ) ) {
+  foreach ( $news_data_by_tab['all'] as $idx => $card ) {
+    $card['size'] = 0 === $idx ? 'featured' : 'regular';
+    $news_cards[] = $card;
+  }
+}
+
+$news_archive_url = get_permalink( (int) get_option( 'page_for_posts' ) );
+if ( ! $news_archive_url ) {
+  $news_archive_url = get_post_type_archive_link( 'post' );
+}
+if ( ! $news_archive_url ) {
+  $news_archive_url = home_url( '/' );
+}
 ?>
-test
 <main id="primary" class="site-main home-template">
   <section class="hero-slider-wrap figma-node-76-43" data-node-id="76:43" style="background-image:url('<?php echo esc_url( $hero_bg ); ?>');">
     <div class="hero-slider js-hero-slider">
@@ -177,6 +292,54 @@ test
     the_content();
   endwhile;
   ?>
+
+  <section class="home-news figma-node-695-93" data-node-id="695:93" aria-label="<?php esc_attr_e( 'News', 'flipnewmedia' ); ?>">
+    <div class="container-ext">
+      <div class="home-news-head">
+        <h2 class="home-news-title">ΤΑ ΝΕΑ ΜΑΣ</h2>
+        <div class="home-news-filters" role="tablist" aria-label="<?php esc_attr_e( 'News categories', 'flipnewmedia' ); ?>">
+          <?php foreach ( $news_tabs as $index => $tab ) : ?>
+            <button
+              class="home-news-filter<?php echo 0 === $index ? ' is-active' : ''; ?>"
+              type="button"
+              role="tab"
+              data-tab="<?php echo esc_attr( $tab['slug'] ); ?>"
+              aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>"
+            >
+              <?php echo esc_html( $tab['label'] ); ?>
+            </button>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
+      <div class="home-news-grid js-home-news-grid">
+        <?php foreach ( $news_cards as $index => $card ) : ?>
+          <article class="home-news-card home-news-card--<?php echo 0 === $index ? 'featured' : 'regular'; ?>">
+            <a class="home-news-card-media" href="<?php echo esc_url( $card['url'] ); ?>" aria-label="<?php esc_attr_e( 'Read more', 'flipnewmedia' ); ?>">
+              <?php if ( ! empty( $card['image'] ) ) : ?>
+                <img src="<?php echo esc_url( $card['image'] ); ?>" alt="<?php echo esc_attr( $card['title'] ); ?>" loading="lazy" decoding="async" />
+              <?php endif; ?>
+              <span class="home-news-card-arrow" aria-hidden="true"></span>
+            </a>
+            <div class="home-news-card-copy">
+              <h3 class="home-news-card-title"><?php echo esc_html( $card['title'] ); ?></h3>
+              <?php if ( ! empty( $card['excerpt'] ) ) : ?>
+                <p class="home-news-card-excerpt"><?php echo esc_html( $card['excerpt'] ); ?></p>
+              <?php endif; ?>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      </div>
+
+      <div class="home-news-cta-wrap">
+        <a class="home-news-cta" href="<?php echo esc_url( $news_archive_url ); ?>">
+          <span class="home-news-cta-text"><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
+          <span class="home-news-cta-arrow" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+  <script type="application/json" id="home-news-data"><?php echo wp_json_encode( $news_data_by_tab ); ?></script>
 </main>
 
 <script>
@@ -218,10 +381,78 @@ test
       $hero.on('afterChange', moveDotsToCurrentSlide);
     }
 
+    function initHomeNewsTabs() {
+      var section = document.querySelector('.home-news');
+      var grid = document.querySelector('.js-home-news-grid');
+      var payloadNode = document.getElementById('home-news-data');
+      if (!section || !grid || !payloadNode) return;
+
+      var newsMap = {};
+      try {
+        newsMap = JSON.parse(payloadNode.textContent || '{}');
+      } catch (e) {
+        newsMap = {};
+      }
+
+      var tabs = section.querySelectorAll('.home-news-filter[data-tab]');
+      if (!tabs.length) return;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function renderCards(tabKey) {
+        var cards = Array.isArray(newsMap[tabKey]) ? newsMap[tabKey] : [];
+        if (!cards.length) {
+          grid.innerHTML = '<p class="home-news-empty"><?php echo esc_js( __( 'Δεν βρέθηκαν άρθρα σε αυτή την κατηγορία.', 'flipnewmedia' ) ); ?></p>';
+          return;
+        }
+
+        grid.innerHTML = cards.map(function (card, index) {
+          var sizeClass = index === 0 ? 'featured' : 'regular';
+          var imageHtml = card.image ? '<img src="' + escapeHtml(card.image) + '" alt="' + escapeHtml(card.title) + '" loading="lazy" decoding="async" />' : '';
+          var excerptHtml = card.excerpt ? '<p class="home-news-card-excerpt">' + escapeHtml(card.excerpt) + '</p>' : '';
+          return (
+            '<article class="home-news-card home-news-card--' + sizeClass + '">' +
+              '<a class="home-news-card-media" href="' + escapeHtml(card.url) + '" aria-label="<?php echo esc_js( __( 'Read more', 'flipnewmedia' ) ); ?>">' +
+                imageHtml +
+                '<span class="home-news-card-arrow" aria-hidden="true"></span>' +
+              '</a>' +
+              '<div class="home-news-card-copy">' +
+                '<h3 class="home-news-card-title">' + escapeHtml(card.title) + '</h3>' +
+                excerptHtml +
+              '</div>' +
+            '</article>'
+          );
+        }).join('');
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tabs.forEach(function (btn) {
+            btn.classList.remove('is-active');
+            btn.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('is-active');
+          tab.setAttribute('aria-selected', 'true');
+          renderCards(tab.getAttribute('data-tab') || 'all');
+        });
+      });
+    }
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initHeroSliderInline);
+      document.addEventListener('DOMContentLoaded', function () {
+        initHeroSliderInline();
+        initHomeNewsTabs();
+      });
     } else {
       initHeroSliderInline();
+      initHomeNewsTabs();
     }
   })();
 </script>

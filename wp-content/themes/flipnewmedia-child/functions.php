@@ -192,3 +192,74 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <?php
 };
+
+/**
+ * Normalize internal URLs so they always follow the current site domain/permalink style.
+ */
+function fnm_make_url_dynamic( $url ) {
+	if ( ! is_string( $url ) || '' === $url ) {
+		return $url;
+	}
+
+	$home_root = untrailingslashit( home_url( '/' ) );
+	$origins   = array(
+		untrailingslashit( home_url() ),
+		untrailingslashit( site_url() ),
+	);
+
+	// Convert absolute localhost links to the current site domain.
+	if ( preg_match( '~^https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(?P<path>/[^?#]*)?(?P<query>\?[^#]*)?(?P<frag>#.*)?$~i', $url, $m ) ) {
+		$path = isset( $m['path'] ) ? $m['path'] : '';
+		$query = isset( $m['query'] ) ? $m['query'] : '';
+		$frag = isset( $m['frag'] ) ? $m['frag'] : '';
+		$url = $home_root . $path . $query . $frag;
+	}
+
+	// Remove /index.php from absolute internal URLs.
+	foreach ( $origins as $origin ) {
+		$prefix = $origin . '/index.php';
+		if ( 0 === strpos( $url, $prefix . '/' ) ) {
+			return $origin . '/' . ltrim( substr( $url, strlen( $prefix ) + 1 ), '/' );
+		}
+		if ( 0 === strpos( $url, $prefix . '?' ) ) {
+			return $origin . '/?' . substr( $url, strlen( $prefix ) + 1 );
+		}
+		if ( $url === $prefix ) {
+			return $origin . '/';
+		}
+	}
+
+	// Remove /index.php from relative internal URLs.
+	if ( 0 === strpos( $url, '/index.php/' ) ) {
+		return home_url( '/' . ltrim( substr( $url, 11 ), '/' ) );
+	}
+	if ( 0 === strpos( $url, '/index.php?' ) ) {
+		return home_url( '/?' . substr( $url, 11 ) );
+	}
+	if ( '/index.php' === $url ) {
+		return home_url( '/' );
+	}
+
+	return $url;
+}
+
+add_filter(
+	'nav_menu_link_attributes',
+	function( $atts ) {
+		if ( isset( $atts['href'] ) ) {
+			$atts['href'] = fnm_make_url_dynamic( $atts['href'] );
+		}
+		return $atts;
+	}
+);
+
+function fnm_normalize_content_urls( $content ) {
+	return preg_replace_callback(
+		'~\b(href|src|action)=(["\'])([^"\']+)\2~i',
+		function( $matches ) {
+			return $matches[1] . '=' . $matches[2] . esc_url( fnm_make_url_dynamic( $matches[3] ) ) . $matches[2];
+		},
+		$content
+	);
+}
+add_filter( 'the_content', 'fnm_normalize_content_urls', 20 );
