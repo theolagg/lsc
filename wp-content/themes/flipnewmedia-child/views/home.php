@@ -87,7 +87,7 @@ $solutions_cards = [
   ],
 ];
 ?>
-
+test
 <main id="primary" class="site-main home-template">
   <section class="hero-slider-wrap figma-node-76-43" data-node-id="76:43" style="background-image:url('<?php echo esc_url( $hero_bg ); ?>');">
     <div class="hero-slider js-hero-slider">
