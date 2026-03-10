@@ -26,6 +26,7 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
     volumes:
       - ./wp-content:/var/www/html/wp-content
+      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   phpmyadmin:
     image: phpmyadmin:latest

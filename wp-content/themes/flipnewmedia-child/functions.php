@@ -346,3 +346,130 @@ function lsc_footer_handle_contact_submit() {
 }
 add_action( 'admin_post_lsc_footer_contact_submit', 'lsc_footer_handle_contact_submit' );
 add_action( 'admin_post_nopriv_lsc_footer_contact_submit', 'lsc_footer_handle_contact_submit' );
+
+function lsc_register_career_post_type() {
+	$labels = array(
+		'name'                  => __( 'Careers', 'flipnewmedia' ),
+		'singular_name'         => __( 'Career', 'flipnewmedia' ),
+		'menu_name'             => __( 'Careers', 'flipnewmedia' ),
+		'name_admin_bar'        => __( 'Career', 'flipnewmedia' ),
+		'add_new'               => __( 'Add New', 'flipnewmedia' ),
+		'add_new_item'          => __( 'Add New Career', 'flipnewmedia' ),
+		'new_item'              => __( 'New Career', 'flipnewmedia' ),
+		'edit_item'             => __( 'Edit Career', 'flipnewmedia' ),
+		'view_item'             => __( 'View Career', 'flipnewmedia' ),
+		'all_items'             => __( 'All Careers', 'flipnewmedia' ),
+		'search_items'          => __( 'Search Careers', 'flipnewmedia' ),
+		'not_found'             => __( 'No careers found.', 'flipnewmedia' ),
+		'not_found_in_trash'    => __( 'No careers found in Trash.', 'flipnewmedia' ),
+		'archives'              => __( 'Career Archives', 'flipnewmedia' ),
+		'attributes'            => __( 'Career Attributes', 'flipnewmedia' ),
+		'insert_into_item'      => __( 'Insert into career', 'flipnewmedia' ),
+		'uploaded_to_this_item' => __( 'Uploaded to this career', 'flipnewmedia' ),
+	);
+
+	$args = array(
+		'labels'              => $labels,
+		'public'              => true,
+		'has_archive'         => true,
+		'show_in_rest'        => true,
+		'menu_icon'           => 'dashicons-id-alt',
+		'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail' ),
+		'rewrite'             => array( 'slug' => 'career', 'with_front' => false ),
+		'publicly_queryable'  => true,
+		'show_ui'             => true,
+		'show_in_nav_menus'   => true,
+		'exclude_from_search' => false,
+	);
+
+	register_post_type( 'career', $args );
+}
+add_action( 'init', 'lsc_register_career_post_type' );
+
+function lsc_career_application_redirect_url( $status, $post_id ) {
+	$target = $post_id ? get_permalink( $post_id ) : home_url( '/career/' );
+
+	return add_query_arg(
+		array(
+			'career_form_status' => sanitize_key( $status ),
+		),
+		$target
+	) . '#career-application';
+}
+
+function lsc_handle_career_application_submit() {
+	if ( ! isset( $_POST['lsc_career_application_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsc_career_application_nonce'] ) ), 'lsc_career_application_submit' ) ) {
+		wp_safe_redirect( lsc_career_application_redirect_url( 'error', 0 ) );
+		exit;
+	}
+
+	$post_id   = isset( $_POST['career_post_id'] ) ? absint( wp_unslash( $_POST['career_post_id'] ) ) : 0;
+	$full_name = isset( $_POST['career_full_name'] ) ? sanitize_text_field( wp_unslash( $_POST['career_full_name'] ) ) : '';
+	$phone     = isset( $_POST['career_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['career_phone'] ) ) : '';
+	$email     = isset( $_POST['career_email'] ) ? sanitize_email( wp_unslash( $_POST['career_email'] ) ) : '';
+	$message   = isset( $_POST['career_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['career_message'] ) ) : '';
+	$terms     = isset( $_POST['career_terms'] ) ? sanitize_text_field( wp_unslash( $_POST['career_terms'] ) ) : '';
+
+	if ( empty( $post_id ) || 'career' !== get_post_type( $post_id ) || empty( $full_name ) || empty( $email ) || ! is_email( $email ) || '1' !== $terms ) {
+		wp_safe_redirect( lsc_career_application_redirect_url( 'error', $post_id ) );
+		exit;
+	}
+
+	$attachment_path = '';
+	if ( ! empty( $_FILES['career_cv']['name'] ) && ! empty( $_FILES['career_cv']['tmp_name'] ) ) {
+		$allowed_mimes = array(
+			'pdf'  => 'application/pdf',
+			'doc'  => 'application/msword',
+			'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		);
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+
+		$filename       = isset( $_FILES['career_cv']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['career_cv']['name'] ) ) : '';
+		$validated_type = wp_check_filetype( $filename, $allowed_mimes );
+
+		if ( empty( $validated_type['ext'] ) || empty( $validated_type['type'] ) ) {
+			wp_safe_redirect( lsc_career_application_redirect_url( 'error', $post_id ) );
+			exit;
+		}
+
+		$uploaded = wp_handle_upload(
+			$_FILES['career_cv'],
+			array(
+				'test_form' => false,
+				'mimes'     => $allowed_mimes,
+			)
+		);
+
+		if ( isset( $uploaded['error'] ) ) {
+			wp_safe_redirect( lsc_career_application_redirect_url( 'error', $post_id ) );
+			exit;
+		}
+
+		if ( ! empty( $uploaded['file'] ) ) {
+			$attachment_path = $uploaded['file'];
+		}
+	}
+
+	$to       = get_option( 'admin_email' );
+	$subject  = sprintf( '[%s] Career Application - %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), get_the_title( $post_id ) );
+	$body     = "Career application submitted.\n\n";
+	$body    .= 'Position: ' . get_the_title( $post_id ) . "\n";
+	$body    .= 'Name: ' . $full_name . "\n";
+	$body    .= 'Phone: ' . $phone . "\n";
+	$body    .= 'Email: ' . $email . "\n";
+	$body    .= "Message:\n" . $message . "\n";
+	$headers  = array( 'Reply-To: ' . $email );
+	$attachments = $attachment_path ? array( $attachment_path ) : array();
+
+	$sent = wp_mail( $to, $subject, $body, $headers, $attachments );
+
+	if ( $attachment_path && file_exists( $attachment_path ) ) {
+		wp_delete_file( $attachment_path );
+	}
+
+	wp_safe_redirect( lsc_career_application_redirect_url( $sent ? 'ok' : 'error', $post_id ) );
+	exit;
+}
+add_action( 'admin_post_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
+add_action( 'admin_post_nopriv_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
