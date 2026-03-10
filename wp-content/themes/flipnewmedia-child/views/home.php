@@ -86,8 +86,153 @@ $solutions_cards = [
     'active' => false,
   ],
 ];
+
+$news_filters = [
+  'Όλα',
+  'Εκδηλώσεις',
+  'Νέα προϊόντα',
+  'Science Snap',
+];
+
+$news_cards = [
+  [
+    'title' => 'Lorem ipsum dolor sit amet, consectetur sum dolor sit amet, consectetur etur sum dolor sit amet, consectetur',
+    'url'   => '#',
+    'node'  => '695:98',
+    'size'  => 'featured',
+  ],
+  [
+    'title' => 'Lorem ipsum dolor sit amet, consectetur sum dolor sit amet, consectetur',
+    'url'   => '#',
+    'node'  => '695:107',
+    'size'  => 'regular',
+  ],
+  [
+    'title' => 'Lorem ipsum dolor sit amet, consectetur sum dolor sit amet, consectetur',
+    'url'   => '#',
+    'node'  => '695:116',
+    'size'  => 'regular',
+  ],
+];
+
+$partners_slides = [
+  [
+    'left_bg'  => 'https://www.figma.com/api/mcp/asset/18e8f49a-0974-4a85-8d1f-b0d5ebbcda9b',
+    'right_bg' => 'https://www.figma.com/api/mcp/asset/67be2099-8bbf-4a8f-97e8-a2c64be642a0',
+    'logo'     => 'https://www.figma.com/api/mcp/asset/649f5ae5-afb2-43cb-bd92-3439a7c65eff',
+    'more_url' => '#',
+  ],
+  [
+    'left_bg'  => 'https://www.figma.com/api/mcp/asset/18e8f49a-0974-4a85-8d1f-b0d5ebbcda9b',
+    'right_bg' => 'https://www.figma.com/api/mcp/asset/67be2099-8bbf-4a8f-97e8-a2c64be642a0',
+    'logo'     => 'https://www.figma.com/api/mcp/asset/649f5ae5-afb2-43cb-bd92-3439a7c65eff',
+    'more_url' => '#',
+  ],
+  [
+    'left_bg'  => 'https://www.figma.com/api/mcp/asset/18e8f49a-0974-4a85-8d1f-b0d5ebbcda9b',
+    'right_bg' => 'https://www.figma.com/api/mcp/asset/67be2099-8bbf-4a8f-97e8-a2c64be642a0',
+    'logo'     => 'https://www.figma.com/api/mcp/asset/649f5ae5-afb2-43cb-bd92-3439a7c65eff',
+    'more_url' => '#',
+  ],
+];
+
+$partner_logo_cards = [
+  'https://www.figma.com/api/mcp/asset/7d75d17e-d437-420c-b9bf-086701a6fdc1',
+  'https://www.figma.com/api/mcp/asset/d14b55ff-acca-4eb6-bd36-e8c66e97c570',
+  'https://www.figma.com/api/mcp/asset/f6604b86-5e58-4bb8-881c-0f6a4454ad7f',
+  'https://www.figma.com/api/mcp/asset/efabd33a-edaa-48c0-80b3-cb87ba90544d',
+  'https://www.figma.com/api/mcp/asset/2c647df7-3e4e-4c71-ab67-9f2305ba67c9',
+  'https://www.figma.com/api/mcp/asset/959de01a-bdde-451d-bd72-72088ed2d575',
+];
+
+$news_query_builder = static function ( $category_id = 0 ) {
+  $args = [
+    'post_type'           => 'post',
+    'post_status'         => 'publish',
+    'posts_per_page'      => 3,
+    'ignore_sticky_posts' => true,
+  ];
+
+  if ( $category_id > 0 ) {
+    $args['cat'] = (int) $category_id;
+  }
+
+  $query = new WP_Query( $args );
+  $cards = [];
+
+  if ( $query->have_posts() ) {
+    while ( $query->have_posts() ) {
+      $query->the_post();
+
+      $excerpt = wp_strip_all_tags( get_the_excerpt() );
+      if ( '' === $excerpt ) {
+        $excerpt = get_the_title();
+      }
+
+      $cards[] = [
+        'url'     => get_permalink(),
+        'title'   => get_the_title(),
+        'excerpt' => wp_trim_words( $excerpt, 18, '...' ),
+        'image'   => get_the_post_thumbnail_url( get_the_ID(), 'large' ),
+      ];
+    }
+  }
+  wp_reset_postdata();
+
+  return $cards;
+};
+
+$news_terms = get_categories(
+  [
+    'taxonomy'   => 'category',
+    'hide_empty' => true,
+    'orderby'    => 'name',
+    'order'      => 'ASC',
+  ]
+);
+
+$news_tabs = [
+  [
+    'slug'  => 'all',
+    'label' => __( 'Όλα', 'flipnewmedia' ),
+  ],
+];
+
+if ( ! empty( $news_terms ) ) {
+  foreach ( $news_terms as $term ) {
+    $news_tabs[] = [
+      'slug'    => 'cat-' . (int) $term->term_id,
+      'label'   => $term->name,
+      'term_id' => (int) $term->term_id,
+    ];
+  }
+}
+
+$news_data_by_tab        = [];
+$news_data_by_tab['all'] = $news_query_builder();
+foreach ( $news_tabs as $tab ) {
+  if ( empty( $tab['term_id'] ) ) {
+    continue;
+  }
+  $news_data_by_tab[ $tab['slug'] ] = $news_query_builder( (int) $tab['term_id'] );
+}
+
+$news_cards = [];
+if ( ! empty( $news_data_by_tab['all'] ) ) {
+  foreach ( $news_data_by_tab['all'] as $idx => $card ) {
+    $card['size'] = 0 === $idx ? 'featured' : 'regular';
+    $news_cards[] = $card;
+  }
+}
+
+$news_archive_url = get_permalink( (int) get_option( 'page_for_posts' ) );
+if ( ! $news_archive_url ) {
+  $news_archive_url = get_post_type_archive_link( 'post' );
+}
+if ( ! $news_archive_url ) {
+  $news_archive_url = home_url( '/' );
+}
 ?>
-test
 <main id="primary" class="site-main home-template">
   <section class="hero-slider-wrap figma-node-76-43" data-node-id="76:43" style="background-image:url('<?php echo esc_url( $hero_bg ); ?>');">
     <div class="hero-slider js-hero-slider">
@@ -177,6 +322,89 @@ test
     the_content();
   endwhile;
   ?>
+
+  <section class="home-news figma-node-695-93" data-node-id="695:93" aria-label="<?php esc_attr_e( 'News', 'flipnewmedia' ); ?>">
+    <div class="container-ext">
+      <div class="home-news-head">
+        <h2 class="home-news-title">ΤΑ ΝΕΑ ΜΑΣ</h2>
+        <div class="home-news-filters" role="tablist" aria-label="<?php esc_attr_e( 'News categories', 'flipnewmedia' ); ?>">
+          <?php foreach ( $news_tabs as $index => $tab ) : ?>
+            <button
+              class="home-news-filter<?php echo 0 === $index ? ' is-active' : ''; ?>"
+              type="button"
+              role="tab"
+              data-tab="<?php echo esc_attr( $tab['slug'] ); ?>"
+              aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>"
+            >
+              <?php echo esc_html( $tab['label'] ); ?>
+            </button>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
+      <div class="home-news-grid js-home-news-grid">
+        <?php foreach ( $news_cards as $index => $card ) : ?>
+          <article class="home-news-card home-news-card--<?php echo 0 === $index ? 'featured' : 'regular'; ?>">
+            <a class="home-news-card-media" href="<?php echo esc_url( $card['url'] ); ?>" aria-label="<?php esc_attr_e( 'Read more', 'flipnewmedia' ); ?>">
+              <?php if ( ! empty( $card['image'] ) ) : ?>
+                <img src="<?php echo esc_url( $card['image'] ); ?>" alt="<?php echo esc_attr( $card['title'] ); ?>" loading="lazy" decoding="async" />
+              <?php endif; ?>
+              <span class="home-news-card-arrow" aria-hidden="true"></span>
+            </a>
+            <div class="home-news-card-copy">
+              <h3 class="home-news-card-title"><?php echo esc_html( $card['title'] ); ?></h3>
+              <?php if ( ! empty( $card['excerpt'] ) ) : ?>
+                <p class="home-news-card-excerpt"><?php echo esc_html( $card['excerpt'] ); ?></p>
+              <?php endif; ?>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      </div>
+
+      <div class="home-news-cta-wrap">
+        <a class="home-news-cta" href="<?php echo esc_url( $news_archive_url ); ?>">
+          <span class="home-news-cta-text"><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
+          <span class="home-news-cta-arrow" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-partners figma-node-700-95" data-node-id="700:95" aria-label="<?php esc_attr_e( 'Strategic partners', 'flipnewmedia' ); ?>">
+    <div class="container-ext">
+      <h2 class="home-partners-title" data-node-id="642:4138"><?php esc_html_e( 'ΟΙ ΣΤΡΑΤΗΓΙΚΟΙ ΜΑΣ ΣΥΝΕΡΓΑΤΕΣ', 'flipnewmedia' ); ?></h2>
+    </div>
+    <div class="home-partners-slider js-home-partners-slider">
+      <?php foreach ( $partners_slides as $slide ) : ?>
+        <article class="home-partners-slide">
+          <div class="home-partners-media">
+            <div class="home-partners-bg home-partners-bg--left" style="background-image:url('<?php echo esc_url( $slide['left_bg'] ); ?>');"></div>
+            <div class="home-partners-bg home-partners-bg--right" style="background-image:url('<?php echo esc_url( $slide['right_bg'] ); ?>');"></div>
+            <div class="home-partners-logo-wrap">
+              <img class="home-partners-logo" src="<?php echo esc_url( $slide['logo'] ); ?>" alt="<?php esc_attr_e( 'Partner logo', 'flipnewmedia' ); ?>" loading="lazy" decoding="async" />
+            </div>
+            <a class="home-partners-more" href="<?php echo esc_url( $slide['more_url'] ); ?>">
+              <span><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
+            </a>
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  </section>
+
+  <section class="home-partner-logos figma-node-642-3974" data-node-id="642:3974" aria-label="<?php esc_attr_e( 'Partner brands', 'flipnewmedia' ); ?>">
+    <div class="home-partner-logos-slider js-home-partner-logos-slider">
+      <?php foreach ( $partner_logo_cards as $logo_src ) : ?>
+        <article class="home-partner-logos-slide">
+          <div class="home-partner-logos-card">
+            <img src="<?php echo esc_url( $logo_src ); ?>" alt="<?php esc_attr_e( 'Partner brand', 'flipnewmedia' ); ?>" loading="lazy" decoding="async" />
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  </section>
+
+  <script type="application/json" id="home-news-data"><?php echo wp_json_encode( $news_data_by_tab ); ?></script>
 </main>
 
 <script>
@@ -218,10 +446,175 @@ test
       $hero.on('afterChange', moveDotsToCurrentSlide);
     }
 
+    function initHomeNewsTabs() {
+      var section = document.querySelector('.home-news');
+      var grid = document.querySelector('.js-home-news-grid');
+      var payloadNode = document.getElementById('home-news-data');
+      if (!section || !grid || !payloadNode) return;
+
+      var newsMap = {};
+      try {
+        newsMap = JSON.parse(payloadNode.textContent || '{}');
+      } catch (e) {
+        newsMap = {};
+      }
+
+      var tabs = section.querySelectorAll('.home-news-filter[data-tab]');
+      if (!tabs.length) return;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function renderCards(tabKey) {
+        var cards = Array.isArray(newsMap[tabKey]) ? newsMap[tabKey] : [];
+        if (!cards.length) {
+          grid.innerHTML = '<p class="home-news-empty"><?php echo esc_js( __( 'Δεν βρέθηκαν άρθρα σε αυτή την κατηγορία.', 'flipnewmedia' ) ); ?></p>';
+          return;
+        }
+
+        grid.innerHTML = cards.map(function (card, index) {
+          var sizeClass = index === 0 ? 'featured' : 'regular';
+          var imageHtml = card.image ? '<img src="' + escapeHtml(card.image) + '" alt="' + escapeHtml(card.title) + '" loading="lazy" decoding="async" />' : '';
+          var excerptHtml = card.excerpt ? '<p class="home-news-card-excerpt">' + escapeHtml(card.excerpt) + '</p>' : '';
+          return (
+            '<article class="home-news-card home-news-card--' + sizeClass + '">' +
+              '<a class="home-news-card-media" href="' + escapeHtml(card.url) + '" aria-label="<?php echo esc_js( __( 'Read more', 'flipnewmedia' ) ); ?>">' +
+                imageHtml +
+                '<span class="home-news-card-arrow" aria-hidden="true"></span>' +
+              '</a>' +
+              '<div class="home-news-card-copy">' +
+                '<h3 class="home-news-card-title">' + escapeHtml(card.title) + '</h3>' +
+                excerptHtml +
+              '</div>' +
+            '</article>'
+          );
+        }).join('');
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tabs.forEach(function (btn) {
+            btn.classList.remove('is-active');
+            btn.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('is-active');
+          tab.setAttribute('aria-selected', 'true');
+          renderCards(tab.getAttribute('data-tab') || 'all');
+        });
+      });
+    }
+
+    function initHomePartnersSlider() {
+      if (typeof window.jQuery === 'undefined') return;
+      var $ = window.jQuery;
+      if (typeof $.fn.slick !== 'function') return;
+
+      var $slider = $('.js-home-partners-slider');
+      if (!$slider.length) return;
+
+      if ($slider.hasClass('slick-initialized')) {
+        $slider.slick('unslick');
+      }
+
+      $slider.slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        infinite: true,
+        speed: 550,
+        arrows: true,
+        dots: true,
+        adaptiveHeight: false,
+        prevArrow: '<button type="button" class="slick-prev" aria-label="Previous partner"></button>',
+        nextArrow: '<button type="button" class="slick-next" aria-label="Next partner"></button>'
+      });
+
+      $slider.off('.partnersCursor');
+      $slider.on('mouseenter.partnersCursor', '.home-partners-media', function () {
+        this.classList.add('is-cursor-active');
+      });
+
+      $slider.on('mousemove.partnersCursor', '.home-partners-media', function (event) {
+        var bubble = this.querySelector('.home-partners-more');
+        if (!bubble) return;
+
+        var rect = this.getBoundingClientRect();
+        var x = event.clientX - rect.left;
+        var y = event.clientY - rect.top;
+        var pad = 24;
+
+        x = Math.max(pad, Math.min(rect.width - pad, x));
+        y = Math.max(pad, Math.min(rect.height - pad, y));
+
+        bubble.style.left = x + 'px';
+        bubble.style.top = y + 'px';
+      });
+
+      $slider.on('mouseleave.partnersCursor', '.home-partners-media', function () {
+        this.classList.remove('is-cursor-active');
+      });
+    }
+
+    function initHomePartnerLogosSlider() {
+      if (typeof window.jQuery === 'undefined') return;
+      var $ = window.jQuery;
+      if (typeof $.fn.slick !== 'function') return;
+
+      var $slider = $('.js-home-partner-logos-slider');
+      if (!$slider.length) return;
+
+      if ($slider.hasClass('slick-initialized')) {
+        $slider.slick('unslick');
+      }
+
+      $slider.slick({
+        slidesToShow: 5,
+        slidesToScroll: 1,
+        infinite: true,
+        arrows: false,
+        dots: false,
+        speed: 500,
+        autoplay: true,
+        autoplaySpeed: 2800,
+        pauseOnHover: true,
+        responsive: [
+          {
+            breakpoint: 1400,
+            settings: { slidesToShow: 4 }
+          },
+          {
+            breakpoint: 1100,
+            settings: { slidesToShow: 3 }
+          },
+          {
+            breakpoint: 768,
+            settings: { slidesToShow: 2 }
+          },
+          {
+            breakpoint: 520,
+            settings: { slidesToShow: 1.2 }
+          }
+        ]
+      });
+    }
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initHeroSliderInline);
+      document.addEventListener('DOMContentLoaded', function () {
+        initHeroSliderInline();
+        initHomeNewsTabs();
+        initHomePartnersSlider();
+        initHomePartnerLogosSlider();
+      });
     } else {
       initHeroSliderInline();
+      initHomeNewsTabs();
+      initHomePartnersSlider();
+      initHomePartnerLogosSlider();
     }
   })();
 </script>

@@ -192,3 +192,284 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <?php
 };
+
+/**
+ * Normalize internal URLs so they always follow the current site domain/permalink style.
+ */
+function fnm_make_url_dynamic( $url ) {
+	if ( ! is_string( $url ) || '' === $url ) {
+		return $url;
+	}
+
+	$home_root = untrailingslashit( home_url( '/' ) );
+	$origins   = array(
+		untrailingslashit( home_url() ),
+		untrailingslashit( site_url() ),
+	);
+
+	// Convert absolute localhost links to the current site domain.
+	if ( preg_match( '~^https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(?P<path>/[^?#]*)?(?P<query>\?[^#]*)?(?P<frag>#.*)?$~i', $url, $m ) ) {
+		$path = isset( $m['path'] ) ? $m['path'] : '';
+		$query = isset( $m['query'] ) ? $m['query'] : '';
+		$frag = isset( $m['frag'] ) ? $m['frag'] : '';
+		$url = $home_root . $path . $query . $frag;
+	}
+
+	// Remove /index.php from absolute internal URLs.
+	foreach ( $origins as $origin ) {
+		$prefix = $origin . '/index.php';
+		if ( 0 === strpos( $url, $prefix . '/' ) ) {
+			return $origin . '/' . ltrim( substr( $url, strlen( $prefix ) + 1 ), '/' );
+		}
+		if ( 0 === strpos( $url, $prefix . '?' ) ) {
+			return $origin . '/?' . substr( $url, strlen( $prefix ) + 1 );
+		}
+		if ( $url === $prefix ) {
+			return $origin . '/';
+		}
+	}
+
+	// Remove /index.php from relative internal URLs.
+	if ( 0 === strpos( $url, '/index.php/' ) ) {
+		return home_url( '/' . ltrim( substr( $url, 11 ), '/' ) );
+	}
+	if ( 0 === strpos( $url, '/index.php?' ) ) {
+		return home_url( '/?' . substr( $url, 11 ) );
+	}
+	if ( '/index.php' === $url ) {
+		return home_url( '/' );
+	}
+
+	return $url;
+}
+
+add_filter(
+	'nav_menu_link_attributes',
+	function( $atts ) {
+		if ( isset( $atts['href'] ) ) {
+			$atts['href'] = fnm_make_url_dynamic( $atts['href'] );
+		}
+		return $atts;
+	}
+);
+
+function fnm_normalize_content_urls( $content ) {
+	return preg_replace_callback(
+		'~\b(href|src|action)=(["\'])([^"\']+)\2~i',
+		function( $matches ) {
+			return $matches[1] . '=' . $matches[2] . esc_url( fnm_make_url_dynamic( $matches[3] ) ) . $matches[2];
+		},
+		$content
+	);
+}
+add_filter( 'the_content', 'fnm_normalize_content_urls', 20 );
+
+/**
+ * Build a safe return URL for footer forms.
+ */
+function lsc_footer_return_url() {
+	$referer = wp_get_referer();
+	$target  = $referer ? $referer : home_url( '/' );
+	return add_query_arg(
+		array(
+			'lsc_footer_status' => null,
+			'lsc_footer_form'   => null,
+		),
+		$target
+	) . '#contact-footer';
+}
+
+function lsc_footer_redirect_with_status( $status, $form ) {
+	$url = add_query_arg(
+		array(
+			'lsc_footer_status' => sanitize_key( $status ),
+			'lsc_footer_form'   => sanitize_key( $form ),
+		),
+		lsc_footer_return_url()
+	);
+
+	wp_safe_redirect( $url );
+	exit;
+}
+
+function lsc_footer_handle_newsletter_submit() {
+	if ( ! isset( $_POST['lsc_footer_newsletter_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsc_footer_newsletter_nonce'] ) ), 'lsc_footer_newsletter_submit' ) ) {
+		lsc_footer_redirect_with_status( 'error', 'newsletter' );
+	}
+
+	$email = isset( $_POST['newsletter_email'] ) ? sanitize_email( wp_unslash( $_POST['newsletter_email'] ) ) : '';
+	$terms = isset( $_POST['newsletter_terms'] ) ? sanitize_text_field( wp_unslash( $_POST['newsletter_terms'] ) ) : '';
+
+	if ( empty( $email ) || ! is_email( $email ) || '1' !== $terms ) {
+		lsc_footer_redirect_with_status( 'error', 'newsletter' );
+	}
+
+	$to      = get_option( 'admin_email' );
+	$subject = sprintf( '[%s] Newsletter Signup', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) );
+	$message = "New newsletter signup from footer:\n\nEmail: {$email}\n";
+	$headers = array( 'Reply-To: ' . $email );
+
+	$sent = wp_mail( $to, $subject, $message, $headers );
+
+	lsc_footer_redirect_with_status( $sent ? 'ok' : 'error', 'newsletter' );
+}
+add_action( 'admin_post_lsc_footer_newsletter_submit', 'lsc_footer_handle_newsletter_submit' );
+add_action( 'admin_post_nopriv_lsc_footer_newsletter_submit', 'lsc_footer_handle_newsletter_submit' );
+
+function lsc_footer_handle_contact_submit() {
+	if ( ! isset( $_POST['lsc_footer_contact_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsc_footer_contact_nonce'] ) ), 'lsc_footer_contact_submit' ) ) {
+		lsc_footer_redirect_with_status( 'error', 'contact' );
+	}
+
+	$full_name = isset( $_POST['full_name'] ) ? sanitize_text_field( wp_unslash( $_POST['full_name'] ) ) : '';
+	$phone     = isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '';
+	$email     = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+	$message   = isset( $_POST['message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message'] ) ) : '';
+	$terms     = isset( $_POST['contact_terms'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_terms'] ) ) : '';
+
+	if ( empty( $full_name ) || empty( $email ) || ! is_email( $email ) || '1' !== $terms ) {
+		lsc_footer_redirect_with_status( 'error', 'contact' );
+	}
+
+	$to          = get_option( 'admin_email' );
+	$mail_subject = sprintf( '[%s] Footer Contact Request', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) );
+	$mail_body    = "New contact request from footer:\n\n";
+	$mail_body   .= "Name: {$full_name}\n";
+	$mail_body   .= "Phone: {$phone}\n";
+	$mail_body   .= "Email: {$email}\n";
+	$mail_body   .= "Message:\n{$message}\n";
+	$headers      = array( 'Reply-To: ' . $email );
+
+	$sent = wp_mail( $to, $mail_subject, $mail_body, $headers );
+
+	lsc_footer_redirect_with_status( $sent ? 'ok' : 'error', 'contact' );
+}
+add_action( 'admin_post_lsc_footer_contact_submit', 'lsc_footer_handle_contact_submit' );
+add_action( 'admin_post_nopriv_lsc_footer_contact_submit', 'lsc_footer_handle_contact_submit' );
+
+function lsc_register_career_post_type() {
+	$labels = array(
+		'name'                  => __( 'Careers', 'flipnewmedia' ),
+		'singular_name'         => __( 'Career', 'flipnewmedia' ),
+		'menu_name'             => __( 'Careers', 'flipnewmedia' ),
+		'name_admin_bar'        => __( 'Career', 'flipnewmedia' ),
+		'add_new'               => __( 'Add New', 'flipnewmedia' ),
+		'add_new_item'          => __( 'Add New Career', 'flipnewmedia' ),
+		'new_item'              => __( 'New Career', 'flipnewmedia' ),
+		'edit_item'             => __( 'Edit Career', 'flipnewmedia' ),
+		'view_item'             => __( 'View Career', 'flipnewmedia' ),
+		'all_items'             => __( 'All Careers', 'flipnewmedia' ),
+		'search_items'          => __( 'Search Careers', 'flipnewmedia' ),
+		'not_found'             => __( 'No careers found.', 'flipnewmedia' ),
+		'not_found_in_trash'    => __( 'No careers found in Trash.', 'flipnewmedia' ),
+		'archives'              => __( 'Career Archives', 'flipnewmedia' ),
+		'attributes'            => __( 'Career Attributes', 'flipnewmedia' ),
+		'insert_into_item'      => __( 'Insert into career', 'flipnewmedia' ),
+		'uploaded_to_this_item' => __( 'Uploaded to this career', 'flipnewmedia' ),
+	);
+
+	$args = array(
+		'labels'              => $labels,
+		'public'              => true,
+		'has_archive'         => true,
+		'show_in_rest'        => true,
+		'menu_icon'           => 'dashicons-id-alt',
+		'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail' ),
+		'rewrite'             => array( 'slug' => 'career', 'with_front' => false ),
+		'publicly_queryable'  => true,
+		'show_ui'             => true,
+		'show_in_nav_menus'   => true,
+		'exclude_from_search' => false,
+	);
+
+	register_post_type( 'career', $args );
+}
+add_action( 'init', 'lsc_register_career_post_type' );
+
+function lsc_career_application_redirect_url( $status, $post_id ) {
+	$target = $post_id ? get_permalink( $post_id ) : home_url( '/career/' );
+
+	return add_query_arg(
+		array(
+			'career_form_status' => sanitize_key( $status ),
+		),
+		$target
+	) . '#career-application';
+}
+
+function lsc_handle_career_application_submit() {
+	if ( ! isset( $_POST['lsc_career_application_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsc_career_application_nonce'] ) ), 'lsc_career_application_submit' ) ) {
+		wp_safe_redirect( lsc_career_application_redirect_url( 'error', 0 ) );
+		exit;
+	}
+
+	$post_id   = isset( $_POST['career_post_id'] ) ? absint( wp_unslash( $_POST['career_post_id'] ) ) : 0;
+	$full_name = isset( $_POST['career_full_name'] ) ? sanitize_text_field( wp_unslash( $_POST['career_full_name'] ) ) : '';
+	$phone     = isset( $_POST['career_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['career_phone'] ) ) : '';
+	$email     = isset( $_POST['career_email'] ) ? sanitize_email( wp_unslash( $_POST['career_email'] ) ) : '';
+	$message   = isset( $_POST['career_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['career_message'] ) ) : '';
+	$terms     = isset( $_POST['career_terms'] ) ? sanitize_text_field( wp_unslash( $_POST['career_terms'] ) ) : '';
+
+	if ( empty( $post_id ) || 'career' !== get_post_type( $post_id ) || empty( $full_name ) || empty( $email ) || ! is_email( $email ) || '1' !== $terms ) {
+		wp_safe_redirect( lsc_career_application_redirect_url( 'error', $post_id ) );
+		exit;
+	}
+
+	$attachment_path = '';
+	if ( ! empty( $_FILES['career_cv']['name'] ) && ! empty( $_FILES['career_cv']['tmp_name'] ) ) {
+		$allowed_mimes = array(
+			'pdf'  => 'application/pdf',
+			'doc'  => 'application/msword',
+			'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		);
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+
+		$filename       = isset( $_FILES['career_cv']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['career_cv']['name'] ) ) : '';
+		$validated_type = wp_check_filetype( $filename, $allowed_mimes );
+
+		if ( empty( $validated_type['ext'] ) || empty( $validated_type['type'] ) ) {
+			wp_safe_redirect( lsc_career_application_redirect_url( 'error', $post_id ) );
+			exit;
+		}
+
+		$uploaded = wp_handle_upload(
+			$_FILES['career_cv'],
+			array(
+				'test_form' => false,
+				'mimes'     => $allowed_mimes,
+			)
+		);
+
+		if ( isset( $uploaded['error'] ) ) {
+			wp_safe_redirect( lsc_career_application_redirect_url( 'error', $post_id ) );
+			exit;
+		}
+
+		if ( ! empty( $uploaded['file'] ) ) {
+			$attachment_path = $uploaded['file'];
+		}
+	}
+
+	$to       = get_option( 'admin_email' );
+	$subject  = sprintf( '[%s] Career Application - %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), get_the_title( $post_id ) );
+	$body     = "Career application submitted.\n\n";
+	$body    .= 'Position: ' . get_the_title( $post_id ) . "\n";
+	$body    .= 'Name: ' . $full_name . "\n";
+	$body    .= 'Phone: ' . $phone . "\n";
+	$body    .= 'Email: ' . $email . "\n";
+	$body    .= "Message:\n" . $message . "\n";
+	$headers  = array( 'Reply-To: ' . $email );
+	$attachments = $attachment_path ? array( $attachment_path ) : array();
+
+	$sent = wp_mail( $to, $subject, $body, $headers, $attachments );
+
+	if ( $attachment_path && file_exists( $attachment_path ) ) {
+		wp_delete_file( $attachment_path );
+	}
+
+	wp_safe_redirect( lsc_career_application_redirect_url( $sent ? 'ok' : 'error', $post_id ) );
+	exit;
+}
+add_action( 'admin_post_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
+add_action( 'admin_post_nopriv_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
