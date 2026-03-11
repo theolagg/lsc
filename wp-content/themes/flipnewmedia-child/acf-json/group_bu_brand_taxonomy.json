@@ -1,0 +1,202 @@
+{
+    "key": "group_bu_brand_taxonomy",
+    "title": "BU Brand Taxonomy",
+    "fields": [
+        {
+            "key": "field_bu_brand_tab_hero",
+            "label": "Hero",
+            "name": "",
+            "aria-label": "",
+            "type": "tab",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "placement": "top",
+            "endpoint": 0,
+            "selected": 1
+        },
+        {
+            "key": "field_bu_brand_logo",
+            "label": "Brand Logo",
+            "name": "logo",
+            "aria-label": "",
+            "type": "image",
+            "instructions": "Displayed in the BU brand hero and brand sliders.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "array",
+            "library": "all",
+            "preview_size": "medium",
+            "min_width": 0,
+            "min_height": 0,
+            "min_size": 0,
+            "max_width": 0,
+            "max_height": 0,
+            "max_size": 0,
+            "mime_types": ""
+        },
+        {
+            "key": "field_bu_brand_tab_intro",
+            "label": "Intro Section",
+            "name": "",
+            "aria-label": "",
+            "type": "tab",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "placement": "top",
+            "endpoint": 0,
+            "selected": 0
+        },
+        {
+            "key": "field_bu_brand_intro_title",
+            "label": "Intro Title",
+            "name": "brand_intro_title",
+            "aria-label": "",
+            "type": "textarea",
+            "instructions": "Main heading for the second section of the BU brand taxonomy page.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "rows": 3,
+            "new_lines": "",
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": ""
+        },
+        {
+            "key": "field_bu_brand_intro_description",
+            "label": "Intro Description",
+            "name": "brand_intro_description",
+            "aria-label": "",
+            "type": "textarea",
+            "instructions": "Rich paragraph copy shown on the right side of the intro section.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "rows": 8,
+            "new_lines": "wpautop",
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": ""
+        },
+        {
+            "key": "field_bu_brand_intro_button_text",
+            "label": "Intro Button Text",
+            "name": "brand_intro_button_text",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "Label for the intro CTA button.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Περισσότερα",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_bu_brand_intro_button_url",
+            "label": "Intro Button URL",
+            "name": "brand_intro_button_url",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "Destination for the intro CTA button.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "placeholder": ""
+        },
+        {
+            "key": "field_bu_brand_tab_categories",
+            "label": "Categories Slider",
+            "name": "",
+            "aria-label": "",
+            "type": "tab",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "placement": "top",
+            "endpoint": 0,
+            "selected": 0
+        },
+        {
+            "key": "field_bu_brand_categories_description",
+            "label": "Categories Description",
+            "name": "brand_categories_description",
+            "aria-label": "",
+            "type": "textarea",
+            "instructions": "Centered copy shown above the category tabs and slider.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "rows": 4,
+            "new_lines": "wpautop",
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": ""
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "taxonomy",
+                "operator": "==",
+                "value": "bu-brand"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "display_title": "",
+    "modified": 1773237165
+}

@@ -386,6 +386,101 @@ function lsc_register_career_post_type() {
 }
 add_action( 'init', 'lsc_register_career_post_type' );
 
+function lsc_register_bu_products_content_types() {
+	$post_type_labels = array(
+		'name'                  => __( 'BU Products', 'flipnewmedia' ),
+		'singular_name'         => __( 'BU Product', 'flipnewmedia' ),
+		'menu_name'             => __( 'BU Products', 'flipnewmedia' ),
+		'name_admin_bar'        => __( 'BU Product', 'flipnewmedia' ),
+		'add_new'               => __( 'Add New', 'flipnewmedia' ),
+		'add_new_item'          => __( 'Add New BU Product', 'flipnewmedia' ),
+		'new_item'              => __( 'New BU Product', 'flipnewmedia' ),
+		'edit_item'             => __( 'Edit BU Product', 'flipnewmedia' ),
+		'view_item'             => __( 'View BU Product', 'flipnewmedia' ),
+		'all_items'             => __( 'All BU Products', 'flipnewmedia' ),
+		'search_items'          => __( 'Search BU Products', 'flipnewmedia' ),
+		'not_found'             => __( 'No BU products found.', 'flipnewmedia' ),
+		'not_found_in_trash'    => __( 'No BU products found in Trash.', 'flipnewmedia' ),
+		'archives'              => __( 'BU Product Archives', 'flipnewmedia' ),
+		'attributes'            => __( 'BU Product Attributes', 'flipnewmedia' ),
+		'insert_into_item'      => __( 'Insert into BU product', 'flipnewmedia' ),
+		'uploaded_to_this_item' => __( 'Uploaded to this BU product', 'flipnewmedia' ),
+	);
+
+	$post_type_args = array(
+		'labels'              => $post_type_labels,
+		'public'              => true,
+		'has_archive'         => true,
+		'show_in_rest'        => true,
+		'menu_icon'           => 'dashicons-products',
+		'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail' ),
+		'rewrite'             => array( 'slug' => 'bu-products', 'with_front' => false ),
+		'publicly_queryable'  => true,
+		'show_ui'             => true,
+		'show_in_nav_menus'   => true,
+		'exclude_from_search' => false,
+		'taxonomies'          => array( 'bu-category', 'bu-brand' ),
+	);
+
+	register_post_type( 'bu-product', $post_type_args );
+
+	$category_labels = array(
+		'name'              => __( 'BU Categories', 'flipnewmedia' ),
+		'singular_name'     => __( 'BU Category', 'flipnewmedia' ),
+		'search_items'      => __( 'Search BU Categories', 'flipnewmedia' ),
+		'all_items'         => __( 'All BU Categories', 'flipnewmedia' ),
+		'parent_item'       => __( 'Parent BU Category', 'flipnewmedia' ),
+		'parent_item_colon' => __( 'Parent BU Category:', 'flipnewmedia' ),
+		'edit_item'         => __( 'Edit BU Category', 'flipnewmedia' ),
+		'update_item'       => __( 'Update BU Category', 'flipnewmedia' ),
+		'add_new_item'      => __( 'Add New BU Category', 'flipnewmedia' ),
+		'new_item_name'     => __( 'New BU Category Name', 'flipnewmedia' ),
+		'menu_name'         => __( 'BU Categories', 'flipnewmedia' ),
+	);
+
+	register_taxonomy(
+		'bu-category',
+		array( 'bu-product' ),
+		array(
+			'labels'            => $category_labels,
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_in_rest'      => true,
+			'show_admin_column' => true,
+			'rewrite'           => array( 'slug' => 'bu-categories', 'with_front' => false ),
+		)
+	);
+
+	$brand_labels = array(
+		'name'                       => __( 'BU Brands', 'flipnewmedia' ),
+		'singular_name'              => __( 'BU Brand', 'flipnewmedia' ),
+		'search_items'               => __( 'Search BU Brands', 'flipnewmedia' ),
+		'all_items'                  => __( 'All BU Brands', 'flipnewmedia' ),
+		'edit_item'                  => __( 'Edit BU Brand', 'flipnewmedia' ),
+		'update_item'                => __( 'Update BU Brand', 'flipnewmedia' ),
+		'add_new_item'               => __( 'Add New BU Brand', 'flipnewmedia' ),
+		'new_item_name'              => __( 'New BU Brand Name', 'flipnewmedia' ),
+		'separate_items_with_commas' => __( 'Separate BU brands with commas', 'flipnewmedia' ),
+		'add_or_remove_items'        => __( 'Add or remove BU brands', 'flipnewmedia' ),
+		'choose_from_most_used'      => __( 'Choose from the most used BU brands', 'flipnewmedia' ),
+		'menu_name'                  => __( 'BU Brands', 'flipnewmedia' ),
+	);
+
+	register_taxonomy(
+		'bu-brand',
+		array( 'bu-product' ),
+		array(
+			'labels'            => $brand_labels,
+			'public'            => true,
+			'hierarchical'      => false,
+			'show_in_rest'      => true,
+			'show_admin_column' => true,
+			'rewrite'           => array( 'slug' => 'bu-brand', 'with_front' => false ),
+		)
+	);
+}
+add_action( 'init', 'lsc_register_bu_products_content_types' );
+
 function lsc_career_application_redirect_url( $status, $post_id ) {
 	$target = $post_id ? get_permalink( $post_id ) : home_url( '/career/' );
 
@@ -473,3 +568,160 @@ function lsc_handle_career_application_submit() {
 }
 add_action( 'admin_post_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
 add_action( 'admin_post_nopriv_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
+
+/**
+ * Blog archive helpers.
+ */
+function lsc_get_blog_archive_tabs() {
+	$terms = get_categories(
+		array(
+			'taxonomy'   => 'category',
+			'hide_empty' => true,
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		)
+	);
+
+	$tabs = array(
+		array(
+			'slug'  => 'all',
+			'label' => __( 'Όλα', 'flipnewmedia' ),
+			'id'    => 0,
+		),
+	);
+
+	if ( empty( $terms ) || is_wp_error( $terms ) ) {
+		return $tabs;
+	}
+
+	foreach ( $terms as $term ) {
+		$tabs[] = array(
+			'slug'  => 'cat-' . (int) $term->term_id,
+			'label' => $term->name,
+			'id'    => (int) $term->term_id,
+		);
+	}
+
+	return $tabs;
+}
+
+function lsc_get_blog_archive_query_args( $term_id = 0, $posts_per_page = 11, $offset = 0 ) {
+	$args = array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'ignore_sticky_posts' => true,
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'posts_per_page'      => max( 1, (int) $posts_per_page ),
+		'offset'              => max( 0, (int) $offset ),
+	);
+
+	if ( $term_id > 0 ) {
+		$args['cat'] = (int) $term_id;
+	}
+
+	return $args;
+}
+
+function lsc_render_blog_archive_card( $post_id, $is_featured = false ) {
+	$post_id      = (int) $post_id;
+	$title        = get_the_title( $post_id );
+	$permalink    = get_permalink( $post_id );
+	$excerpt      = wp_trim_words( wp_strip_all_tags( get_the_excerpt( $post_id ) ), $is_featured ? 18 : 14, '...' );
+	$image_markup = get_the_post_thumbnail(
+		$post_id,
+		'full',
+		array(
+			'alt'      => esc_attr( $title ),
+			'loading'  => 'lazy',
+			'decoding' => 'async',
+		)
+	);
+	$classes = 'home-news-card blog-archive-card';
+	$classes .= $is_featured ? ' blog-archive-card--featured' : ' blog-archive-card--regular';
+
+	ob_start();
+	?>
+	<article <?php post_class( $classes, $post_id ); ?>>
+		<a class="home-news-card-media blog-archive-card__media" href="<?php echo esc_url( $permalink ); ?>" aria-label="<?php echo esc_attr__( 'Read more', 'flipnewmedia' ); ?>">
+			<?php if ( $image_markup ) : ?>
+				<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<?php endif; ?>
+			<span class="home-news-card-arrow" aria-hidden="true"></span>
+		</a>
+
+		<div class="home-news-card-copy blog-archive-card__copy">
+			<h2 class="home-news-card-title blog-archive-card__title">
+				<a href="<?php echo esc_url( $permalink ); ?>"><?php echo esc_html( $title ); ?></a>
+			</h2>
+			<?php if ( $excerpt ) : ?>
+				<p class="home-news-card-excerpt blog-archive-card__excerpt"><?php echo esc_html( $excerpt ); ?></p>
+			<?php endif; ?>
+		</div>
+	</article>
+	<?php
+
+	return (string) ob_get_clean();
+}
+
+function lsc_get_blog_archive_posts_markup( $term_id = 0, $limit = 11, $offset = 0 ) {
+	$query = new WP_Query( lsc_get_blog_archive_query_args( $term_id, $limit, $offset ) );
+
+	if ( ! $query->have_posts() ) {
+		return array(
+			'html'       => '',
+			'count'      => 0,
+			'has_more'   => false,
+			'total'      => 0,
+			'next_offset'=> max( 0, (int) $offset ),
+		);
+	}
+
+	$html = '';
+	foreach ( $query->posts as $index => $post ) {
+		$is_featured = 0 === (int) $offset && 0 === $index;
+		$html       .= lsc_render_blog_archive_card( $post->ID, $is_featured );
+	}
+
+	$count       = count( $query->posts );
+	$total       = (int) $query->found_posts;
+	$next_offset = (int) $offset + $count;
+	wp_reset_postdata();
+
+	return array(
+		'html'        => $html,
+		'count'       => $count,
+		'has_more'    => $next_offset < $total,
+		'total'       => $total,
+		'next_offset' => $next_offset,
+	);
+}
+
+function lsc_ajax_load_blog_archive_posts() {
+	$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'lsc_blog_archive_nonce' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'Invalid request.', 'flipnewmedia' ),
+			),
+			403
+		);
+	}
+
+	$term_id = isset( $_POST['term_id'] ) ? absint( wp_unslash( $_POST['term_id'] ) ) : 0;
+	$offset  = isset( $_POST['offset'] ) ? absint( wp_unslash( $_POST['offset'] ) ) : 0;
+	$limit   = isset( $_POST['limit'] ) ? absint( wp_unslash( $_POST['limit'] ) ) : 8;
+
+	$result = lsc_get_blog_archive_posts_markup( $term_id, $limit, $offset );
+
+	wp_send_json_success(
+		array(
+			'html'        => $result['html'],
+			'has_more'    => $result['has_more'],
+			'next_offset' => $result['next_offset'],
+			'count'       => $result['count'],
+		)
+	);
+}
+add_action( 'wp_ajax_lsc_load_blog_archive_posts', 'lsc_ajax_load_blog_archive_posts' );
+add_action( 'wp_ajax_nopriv_lsc_load_blog_archive_posts', 'lsc_ajax_load_blog_archive_posts' );
