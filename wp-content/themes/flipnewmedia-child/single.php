@@ -67,11 +67,13 @@ if ( ! function_exists( 'lsc_single_post_related_items' ) ) {
 			the_post();
 
 			$post_id         = get_the_ID();
-			$upload_dir      = wp_get_upload_dir();
-			$hero_image_url  = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
 			$back_url        = get_permalink( (int) get_option( 'page_for_posts' ) );
 			$back_url        = $back_url ? $back_url : home_url( '/' );
 			$related_posts   = lsc_single_post_related_items( $post_id );
+			$hero_copy       = get_the_excerpt();
+			if ( ! $hero_copy ) {
+				$hero_copy = wp_trim_words( wp_strip_all_tags( get_the_content() ), 32, '...' );
+			}
 			$body_image_html = get_the_post_thumbnail(
 				$post_id,
 				'full',
@@ -84,14 +86,17 @@ if ( ! function_exists( 'lsc_single_post_related_items' ) ) {
 			?>
 
 			<article id="post-<?php the_ID(); ?>" <?php post_class( 'single-post-layout' ); ?>>
-				<section class="single-post-hero figma-node-712-33" data-node-id="712:33" aria-label="<?php esc_attr_e( 'Article introduction', 'flipnewmedia' ); ?>">
-					<div class="single-post-hero__media" style="background-image:url('<?php echo esc_url( $hero_image_url ); ?>');">
-						<div class="single-post-hero__overlay figma-node-642-5105" data-node-id="642:5105" aria-hidden="true"></div>
-						<div class="container-ext single-post-hero__inner">
-							<h1 class="single-post-hero__title" data-node-id="642:5106"><?php the_title(); ?></h1>
-						</div>
-					</div>
-				</section>
+				<?php
+				echo lsc_render_video_hero(
+					array(
+						'title'         => get_the_title(),
+						'copy'          => $hero_copy,
+						'aria_label'    => __( 'Article introduction', 'flipnewmedia' ),
+						'section_class' => 'single-post-hero figma-node-712-33',
+						'inner_class'   => 'single-post-hero__inner',
+					)
+				);
+				?>
 
 				<section class="single-post-body figma-node-712-34" data-node-id="712:34" aria-label="<?php esc_attr_e( 'Article content', 'flipnewmedia' ); ?>">
 					<div class="container-ext">

@@ -9,8 +9,8 @@
 get_header();
 
 $upload_dir         = wp_get_upload_dir();
-$contact_hero_image = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
-$contact_title      = 'Επικοινωνια';
+$contact_hero_video = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/3940140663-preview.mp4';
+$contact_title      = 'Επικοινωνία';
 $contact_copy       = 'Η ομάδα της LSC είναι πάντα δίπλα σας για να προσφέρει καθοδήγηση, υποστήριξη και λύσεις που ανταποκρίνονται στις ανάγκες σας.';
 $contact_locations  = array(
 	array(
@@ -37,7 +37,10 @@ reset( $contact_locations );
 
 <main id="primary" class="site-main contact-template">
   <section class="contact-hero figma-node-709-42" data-node-id="709:42" aria-label="<?php esc_attr_e( 'Contact introduction', 'flipnewmedia' ); ?>">
-    <div class="contact-hero__media" style="background-image:url('<?php echo esc_url( $contact_hero_image ); ?>');">
+    <div class="contact-hero__media lsc-video-hero__media">
+      <video class="lsc-video-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="<?php echo esc_url( $contact_hero_video ); ?>" type="video/mp4">
+      </video>
       <div class="contact-hero__overlay" aria-hidden="true"></div>
       <div class="container-ext contact-hero__inner">
         <div class="contact-hero__header">

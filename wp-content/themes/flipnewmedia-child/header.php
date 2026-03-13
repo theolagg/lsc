@@ -147,6 +147,11 @@
   </div>
 </header>
 
+<a class="global-contact-chip" href="<?php echo esc_url( home_url( '/contact' ) ); ?>">
+  <span class="hero-contact-icon">+</span>
+  <span><?php esc_html_e( 'Επικοινωνήστε μαζί μας', 'flipnewmedia' ); ?></span>
+</a>
+
 <script>
   (function() {
     var header = document.getElementById('masthead');

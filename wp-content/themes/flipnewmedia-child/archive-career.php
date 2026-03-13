@@ -7,9 +7,6 @@
 
 get_header();
 
-$upload_dir              = wp_get_upload_dir();
-$career_background_image = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
-
 $career_query = new WP_Query(
 	array(
 		'post_type'      => 'career',
@@ -57,25 +54,23 @@ $content = isset( $copy[ $lang ] ) ? $copy[ $lang ] : $copy['el'];
 		?>
 	</div>
 
-	<section class="career-archive__hero" aria-label="<?php esc_attr_e( 'Career archive', 'flipnewmedia' ); ?>">
-		<div class="career-archive__heading-band">
-			<div class="career-archive__visual" aria-hidden="true">
-				<div class="career-archive__visual-media" style="background-image:url('<?php echo esc_url( $career_background_image ); ?>');"></div>
-			</div>
-			<div class="container-ext">
-				<div class="career-archive__heading">
-					<p class="career-archive__eyebrow"><?php echo esc_html( $content['eyebrow'] ); ?></p>
-					<div class="career-archive__rule" aria-hidden="true"></div>
-				</div>
-			</div>
-		</div>
+	<?php
+	echo lsc_render_video_hero(
+		array(
+			'title'         => $content['title'],
+			'copy'          => $content['lead'],
+			'aria_label'    => __( 'Career archive', 'flipnewmedia' ),
+			'section_class' => 'career-archive__hero',
+			'inner_class'   => 'career-archive__hero-inner',
+		)
+	);
+	?>
 
+	<section class="career-archive__content-wrap">
 		<div class="container-ext career-archive__content">
 			<div class="career-archive__layout">
 				<div class="career-archive__intro-column">
 					<div id="career-archive-intro" class="career-archive__intro">
-						<h1 class="career-archive__title"><?php echo esc_html( $content['title'] ); ?></h1>
-						<p class="career-archive__lead"><?php echo esc_html( $content['lead'] ); ?></p>
 						<p class="career-archive__copy">
 							<?php echo esc_html( wp_strip_all_tags( $content['copy'] ) ); ?>
 							<a href="mailto:<?php echo esc_attr( antispambot( $content['email_label'] ) ); ?>" class="career-archive__email"><?php echo esc_html( $content['email_label'] ); ?></a>

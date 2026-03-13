@@ -5,12 +5,11 @@
  * @package FlipNewMedia_Child
  */
 
-$upload_dir       = wp_get_upload_dir();
-$hero_image_url   = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
 $posts_page_id    = (int) get_option( 'page_for_posts' );
 $default_title    = $posts_page_id ? get_the_title( $posts_page_id ) : '';
 $archive_title    = is_home() ? $default_title : wp_strip_all_tags( get_the_archive_title() );
 $archive_title    = $archive_title ? $archive_title : __( 'Τα νέα μας', 'flipnewmedia' );
+$archive_copy     = __( 'Find the latest updates, news, and insights from our industry. Stay informed and ahead of the curve with our expert tips and exclusive content.', 'flipnewmedia' );
 $archive_empty    = __( 'Δεν υπάρχουν ακόμη άρθρα.', 'flipnewmedia' );
 $archive_aria     = __( 'Blog archive', 'flipnewmedia' );
 $archive_tabs     = function_exists( 'lsc_get_blog_archive_tabs' ) ? lsc_get_blog_archive_tabs() : array();
@@ -26,15 +25,17 @@ $archive_nonce             = wp_create_nonce( 'lsc_blog_archive_nonce' );
 ?>
 
 <main id="primary" class="site-main blog-archive-page">
-  <section class="blog-archive-hero figma-node-642-4916" data-node-id="642:4916" aria-label="<?php echo esc_attr( $archive_aria ); ?>">
-    <div class="blog-archive-hero__media" style="background-image:url('<?php echo esc_url( $hero_image_url ); ?>');">
-      <div class="blog-archive-hero__overlay figma-node-642-4918" data-node-id="642:4918" aria-hidden="true"></div>
-      <div class="container-ext blog-archive-hero__inner">
-        <h1 class="blog-archive-hero__title" data-node-id="642:4919"><?php echo esc_html( $archive_title ); ?></h1>
-        <div class="blog-archive-hero__line" data-node-id="642:4920" aria-hidden="true"></div>
-      </div>
-    </div>
-  </section>
+  <?php
+  echo lsc_render_video_hero(
+    array(
+      'title'         => $archive_title,
+      'copy'          => $archive_copy,
+      'aria_label'    => $archive_aria,
+      'section_class' => 'blog-archive-hero figma-node-642-4916',
+      'inner_class'   => 'blog-archive-hero__inner',
+    )
+  );
+  ?>
 
   <section class="blog-archive-feed" aria-label="<?php echo esc_attr( $archive_aria ); ?>">
     <div class="container-ext">

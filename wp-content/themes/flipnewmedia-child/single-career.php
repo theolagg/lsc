@@ -7,8 +7,6 @@
 
 get_header();
 
-$upload_dir             = wp_get_upload_dir();
-$career_hero_image      = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
 $career_return_url      = get_post_type_archive_link( 'career' ) ? get_post_type_archive_link( 'career' ) : home_url( '/career/' );
 $career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( wp_unslash( $_GET['career_form_status'] ) ) : '';
 ?>
@@ -26,6 +24,10 @@ $career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( w
 		<?php
 		$career_permalink    = get_permalink();
 		$career_title        = get_the_title();
+		$career_intro        = get_the_excerpt();
+		if ( ! $career_intro ) {
+			$career_intro = wp_trim_words( wp_strip_all_tags( get_the_content() ), 30, '...' );
+		}
 		$career_share_links  = array(
 			array(
 				'label' => 'Facebook',
@@ -41,13 +43,17 @@ $career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( w
 			),
 		);
 		?>
-		<section class="single-career__hero figma-node-710-211" data-node-id="710:211" aria-label="<?php esc_attr_e( 'Career hero', 'flipnewmedia' ); ?>">
-			<div class="single-career__visual" style="background-image:url('<?php echo esc_url( $career_hero_image ); ?>');" aria-hidden="true"></div>
-			<div class="single-career__fade" aria-hidden="true"></div>
-			<div class="container-ext single-career__hero-inner">
-				<h1 class="single-career__title" data-node-id="642:5638"><?php the_title(); ?></h1>
-			</div>
-		</section>
+		<?php
+		echo lsc_render_video_hero(
+			array(
+				'title'         => get_the_title(),
+				'copy'          => $career_intro,
+				'aria_label'    => __( 'Career hero', 'flipnewmedia' ),
+				'section_class' => 'single-career__hero figma-node-710-211',
+				'inner_class'   => 'single-career__hero-inner',
+			)
+		);
+		?>
 
 		<section class="single-career__details figma-node-710-212" data-node-id="710:212">
 			<div class="container-ext">

@@ -725,3 +725,49 @@ function lsc_ajax_load_blog_archive_posts() {
 }
 add_action( 'wp_ajax_lsc_load_blog_archive_posts', 'lsc_ajax_load_blog_archive_posts' );
 add_action( 'wp_ajax_nopriv_lsc_load_blog_archive_posts', 'lsc_ajax_load_blog_archive_posts' );
+
+function lsc_render_video_hero( $args = array() ) {
+	$upload_dir        = wp_get_upload_dir();
+	$default_video_url = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/3940140663-preview.mp4';
+
+	$args = wp_parse_args(
+		$args,
+		array(
+			'title'         => '',
+			'copy'          => '',
+			'aria_label'    => __( 'Page introduction', 'flipnewmedia' ),
+			'section_class' => '',
+			'inner_class'   => '',
+		)
+	);
+
+	$section_class = trim( 'contact-hero lsc-video-hero ' . $args['section_class'] );
+	$inner_class   = trim( 'contact-hero__inner ' . $args['inner_class'] );
+	$title         = (string) $args['title'];
+	$copy          = wp_strip_all_tags( (string) $args['copy'] );
+
+	ob_start();
+	?>
+	<section class="<?php echo esc_attr( $section_class ); ?>" aria-label="<?php echo esc_attr( $args['aria_label'] ); ?>">
+		<div class="contact-hero__media lsc-video-hero__media">
+			<video class="lsc-video-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+				<source src="<?php echo esc_url( $default_video_url ); ?>" type="video/mp4">
+			</video>
+			<div class="contact-hero__overlay" aria-hidden="true"></div>
+			<div class="container-ext <?php echo esc_attr( $inner_class ); ?>">
+				<div class="contact-hero__header">
+					<h1 class="contact-hero__title"><?php echo esc_html( $title ); ?></h1>
+				</div>
+				<div class="contact-hero__line" aria-hidden="true"></div>
+				<?php if ( '' !== $copy ) : ?>
+					<div class="contact-hero__copy-wrap">
+						<p class="contact-hero__copy"><?php echo esc_html( $copy ); ?></p>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+	</section>
+	<?php
+
+	return (string) ob_get_clean();
+}
