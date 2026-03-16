@@ -24,7 +24,7 @@
 <?php $upload_dir = wp_get_upload_dir(); ?>
 
 <header id="masthead" class="site-header">
-  <div class="container-ext">
+  <div class="container-ext header-container">
     <div class="header-shell">
       <div class="site-branding">
         <?php if ( has_custom_logo() ) : ?>
@@ -146,6 +146,14 @@
     </div>
   </div>
 </header>
+
+<?php if ( function_exists( 'yoast_breadcrumb' ) ) : ?>
+  <div class="site-breadcrumbs">
+    <div class="container-ext">
+      <?php yoast_breadcrumb( '<nav class="site-breadcrumbs__trail" aria-label="' . esc_attr__( 'Breadcrumb', 'flipnewmedia' ) . '">', '</nav>' ); ?>
+    </div>
+  </div>
+<?php endif; ?>
 
 <a class="global-contact-chip" href="<?php echo esc_url( home_url( '/contact' ) ); ?>">
   <span class="hero-contact-icon">+</span>

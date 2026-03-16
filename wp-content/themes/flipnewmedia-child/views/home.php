@@ -416,15 +416,16 @@ if ( ! $news_archive_url ) {
 				</article>
 			<?php endforeach; ?>
 		</div>
-		<img
-			class="hero-bottom-badge"
-			src="<?php echo esc_url( trailingslashit( $upload_dir['baseurl'] ) . '2026/03/Group-1450.svg' ); ?>"
-			alt=""
-			aria-hidden="true"
-		/>
+		<a class="hero-bottom-badge" href="#home-stats" aria-label="<?php esc_attr_e( 'Scroll to next section', 'flipnewmedia' ); ?>">
+			<img
+				src="<?php echo esc_url( trailingslashit( $upload_dir['baseurl'] ) . '2026/03/Group-1450.svg' ); ?>"
+				alt=""
+				aria-hidden="true"
+			/>
+		</a>
 	</section>
 
-	<section class="home-stats figma-node-686-117" data-node-id="686:117" aria-label="<?php esc_attr_e( 'Company statistics', 'flipnewmedia' ); ?>">
+	<section id="home-stats" class="home-stats figma-node-686-117" data-node-id="686:117" aria-label="<?php esc_attr_e( 'Company statistics', 'flipnewmedia' ); ?>">
 		<div class="container-ext home-stats-grid" data-node-id="686:116">
 			<?php foreach ( $stats_items as $item ) : ?>
 				<article class="home-stats-item" data-node-id="<?php echo esc_attr( $item['node'] ); ?>">

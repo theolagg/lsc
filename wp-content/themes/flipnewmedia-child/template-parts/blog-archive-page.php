@@ -9,11 +9,19 @@ $posts_page_id    = (int) get_option( 'page_for_posts' );
 $default_title    = $posts_page_id ? get_the_title( $posts_page_id ) : '';
 $archive_title    = is_home() ? $default_title : wp_strip_all_tags( get_the_archive_title() );
 $archive_title    = $archive_title ? $archive_title : __( 'Τα νέα μας', 'flipnewmedia' );
-$archive_copy     = __( 'Find the latest updates, news, and insights from our industry. Stay informed and ahead of the curve with our expert tips and exclusive content.', 'flipnewmedia' );
 $archive_empty    = __( 'Δεν υπάρχουν ακόμη άρθρα.', 'flipnewmedia' );
 $archive_aria     = __( 'Blog archive', 'flipnewmedia' );
 $archive_tabs     = function_exists( 'lsc_get_blog_archive_tabs' ) ? lsc_get_blog_archive_tabs() : array();
-$initial_data     = function_exists( 'lsc_get_blog_archive_posts_markup' ) ? lsc_get_blog_archive_posts_markup( 0, 11, 0 ) : array(
+$archive_initial_payloads = array();
+
+if ( function_exists( 'lsc_get_blog_archive_posts_markup' ) && ! empty( $archive_tabs ) ) {
+	foreach ( $archive_tabs as $tab ) {
+		$term_id = isset( $tab['id'] ) ? (int) $tab['id'] : 0;
+		$archive_initial_payloads[ (string) $term_id ] = lsc_get_blog_archive_posts_markup( $term_id, 11, 0 );
+	}
+}
+
+$initial_data     = isset( $archive_initial_payloads['0'] ) ? $archive_initial_payloads['0'] : array(
 	'html'        => '',
 	'count'       => 0,
 	'has_more'    => false,
@@ -29,7 +37,7 @@ $archive_nonce             = wp_create_nonce( 'lsc_blog_archive_nonce' );
   echo lsc_render_video_hero(
     array(
       'title'         => $archive_title,
-      'copy'          => $archive_copy,
+      'copy'          => '',
       'aria_label'    => $archive_aria,
       'section_class' => 'blog-archive-hero figma-node-642-4916',
       'inner_class'   => 'blog-archive-hero__inner',
@@ -99,6 +107,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var ajaxUrl = window.my_ajax_object && window.my_ajax_object.ajax_url ? window.my_ajax_object.ajax_url : '';
   var nonce = '<?php echo esc_js( $archive_nonce ); ?>';
   var emptyMessage = '<?php echo esc_js( $archive_empty_by_category ); ?>';
+  var tabCache = <?php echo wp_json_encode( $archive_initial_payloads ); ?> || {};
+  var activeRequestId = 0;
   if (!grid || !loadMoreButton || !ajaxUrl) return;
 
   function setButtonLoading(isLoading) {
@@ -120,6 +130,19 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderEmpty() {
     grid.innerHTML = '<p class="home-news-empty blog-archive-empty">' + emptyMessage + '</p>';
     updateLoadMoreState(false, 0);
+  }
+
+  function renderPayload(data, fallbackToEmpty) {
+    if (!data || !data.html) {
+      if (fallbackToEmpty) {
+        renderEmpty();
+      }
+      return false;
+    }
+
+    grid.innerHTML = data.html;
+    updateLoadMoreState(!!data.has_more, data.next_offset || 0);
+    return true;
   }
 
   function requestPosts(options) {
@@ -152,9 +175,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function loadTab(button) {
     var termId = parseInt(button.getAttribute('data-term-id') || '0', 10);
-    var initialLimit = parseInt(grid.getAttribute('data-initial-limit') || '11', 10);
+    var cacheKey = String(termId);
     activateTab(button);
     grid.setAttribute('data-term-id', String(termId));
+
+    if (tabCache[cacheKey]) {
+      renderPayload(tabCache[cacheKey], true);
+      return;
+    }
+
+    activeRequestId += 1;
+    var requestId = activeRequestId;
     setButtonLoading(true);
 
     requestPosts({
@@ -162,16 +193,28 @@ document.addEventListener('DOMContentLoaded', function () {
       offset: 0,
       limit: initialLimit
     }).then(function (payload) {
+      if (requestId !== activeRequestId) return;
       var data = payload && payload.success ? payload.data : null;
       if (!data || !data.html) {
         renderEmpty();
+        tabCache[cacheKey] = {
+          html: '',
+          has_more: false,
+          next_offset: 0
+        };
         return;
       }
-      grid.innerHTML = data.html;
-      updateLoadMoreState(!!data.has_more, data.next_offset || 0);
+      tabCache[cacheKey] = {
+        html: data.html,
+        has_more: !!data.has_more,
+        next_offset: data.next_offset || 0
+      };
+      renderPayload(data, true);
     }).catch(function () {
+      if (requestId !== activeRequestId) return;
       renderEmpty();
     }).finally(function () {
+      if (requestId !== activeRequestId) return;
       setButtonLoading(false);
     });
   }
@@ -201,11 +244,17 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       grid.insertAdjacentHTML('beforeend', data.html);
       updateLoadMoreState(!!data.has_more, data.next_offset || offset);
+      tabCache[String(termId)] = {
+        html: grid.innerHTML,
+        has_more: !!data.has_more,
+        next_offset: data.next_offset || offset
+      };
     }).catch(function () {
       updateLoadMoreState(false, offset);
     }).finally(function () {
       setButtonLoading(false);
     });
   });
+
 });
 </script>

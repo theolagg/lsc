@@ -6,7 +6,6 @@
  */
 
 get_header();
-global $wp_query;
 
 $term = get_queried_object();
 
@@ -15,34 +14,25 @@ if ( ! $term instanceof WP_Term ) {
 	return;
 }
 
-$hero_image = trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/1080365813-preview-1.png';
-$brand_logo = '';
-$brand_intro_title       = '';
-$brand_intro_description = '';
-$brand_intro_button_text = '';
-$brand_intro_button_url  = '';
+$hero_video                   = trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/1009729562-preview.mp4';
+$brand_intro_title            = '';
+$brand_intro_description      = '';
+$brand_intro_button_text      = '';
+$brand_intro_button_url       = '';
 $brand_categories_description = '';
 
 if ( function_exists( 'get_field' ) ) {
-	$brand_logo = get_field( 'logo', $term ) ?: get_field( 'brand_logo', $term ) ?: get_field( 'image', $term );
-	$brand_intro_title       = (string) ( get_field( 'brand_intro_title', $term ) ?: get_field( 'title', $term ) ?: '' );
-	$brand_intro_description = (string) ( get_field( 'brand_intro_description', $term ) ?: get_field( 'description', $term ) ?: '' );
-	$brand_intro_button_text = (string) ( get_field( 'brand_intro_button_text', $term ) ?: get_field( 'button_text', $term ) ?: '' );
-	$brand_intro_button_url  = (string) ( get_field( 'brand_intro_button_url', $term ) ?: get_field( 'button_url', $term ) ?: '' );
+	$brand_intro_title            = (string) ( get_field( 'brand_intro_title', $term ) ?: get_field( 'title', $term ) ?: '' );
+	$brand_intro_description      = (string) ( get_field( 'brand_intro_description', $term ) ?: get_field( 'description', $term ) ?: '' );
+	$brand_intro_button_text      = (string) ( get_field( 'brand_intro_button_text', $term ) ?: get_field( 'button_text', $term ) ?: '' );
+	$brand_intro_button_url       = (string) ( get_field( 'brand_intro_button_url', $term ) ?: get_field( 'button_url', $term ) ?: '' );
 	$brand_categories_description = (string) ( get_field( 'brand_categories_description', $term ) ?: get_field( 'categories_description', $term ) ?: '' );
 }
 
-$brand_logo_url = '';
-if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
-	$brand_logo_url = $brand_logo['url'];
-} elseif ( is_string( $brand_logo ) ) {
-	$brand_logo_url = $brand_logo;
-}
-
-$brand_intro_title       = $brand_intro_title ? $brand_intro_title : $term->name;
-$brand_intro_description = $brand_intro_description ? $brand_intro_description : wp_strip_all_tags( term_description( $term, 'bu-brand' ) );
-$brand_intro_button_text = $brand_intro_button_text ? $brand_intro_button_text : __( 'Περισσότερα', 'flipnewmedia' );
-$brand_intro_button_url  = $brand_intro_button_url ? $brand_intro_button_url : '';
+$brand_intro_title            = $brand_intro_title ? $brand_intro_title : $term->name;
+$brand_intro_description      = $brand_intro_description ? $brand_intro_description : wp_strip_all_tags( term_description( $term, 'bu-brand' ) );
+$brand_intro_button_text      = $brand_intro_button_text ? $brand_intro_button_text : __( 'Περισσότερα', 'flipnewmedia' );
+$brand_intro_button_url       = $brand_intro_button_url ? $brand_intro_button_url : '';
 $brand_categories_description = $brand_categories_description ? $brand_categories_description : __( 'Δείτε όλες τις διαθέσιμες κατηγορίες προϊόντων αυτού του brand και περιηγηθείτε στις αντίστοιχες λύσεις.', 'flipnewmedia' );
 
 $brand_slider_query = new WP_Query(
@@ -62,6 +52,7 @@ $brand_slider_query = new WP_Query(
 		),
 	)
 );
+
 $brand_category_tabs = array();
 
 if ( $brand_slider_query->have_posts() ) {
@@ -77,28 +68,19 @@ if ( $brand_slider_query->have_posts() ) {
 	);
 	$brand_category_tabs = is_wp_error( $brand_category_tabs ) ? array() : array_values( $brand_category_tabs );
 }
-
-$products_label = sprintf(
-	/* translators: %s: number of posts. */
-	_n( '%s προϊόν', '%s προϊόντα', (int) $wp_query->found_posts, 'flipnewmedia' ),
-	number_format_i18n( (int) $wp_query->found_posts )
-);
 ?>
 
 <main id="primary" class="site-main bu-brand-taxonomy">
 	<section class="bu-brand-hero figma-node-712-43" data-node-id="712:43" aria-label="<?php echo esc_attr( $term->name ); ?>">
-		<div class="bu-brand-hero__visual" style="background-image:url('<?php echo esc_url( $hero_image ); ?>');" aria-hidden="true"></div>
-		<div class="bu-brand-hero__fade" aria-hidden="true"></div>
-
-		<div class="container-ext bu-brand-hero__inner">
-			<div class="bu-brand-hero__logo-wrap">
-				<?php if ( $brand_logo_url ) : ?>
-					<img class="bu-brand-hero__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="<?php echo esc_attr( $term->name ); ?>" loading="lazy" decoding="async" data-node-id="642:4365" />
-				<?php else : ?>
-					<img class="bu-brand-hero__logo bu-brand-hero__logo--placeholder" src="<?php echo esc_url( trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/1080365813-preview-1.png' ); ?>" alt="" aria-hidden="true" />
-				<?php endif; ?>
-				<h1 class="screen-reader-text"><?php echo esc_html( $term->name ); ?></h1>
+		<div class="bu-brand-hero__visual">
+			<video class="bu-brand-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+				<source src="<?php echo esc_url( $hero_video ); ?>" type="video/mp4">
+			</video>
+			<div class="bu-brand-hero__visual-overlay" aria-hidden="true"></div>
+			<div class="container-ext bu-brand-hero__visual-inner">
+				<h1 class="bu-brand-hero__title" data-node-id="642:4365"><?php echo esc_html( $term->name ); ?></h1>
 			</div>
+			<div class="bu-brand-hero__fade" aria-hidden="true"></div>
 		</div>
 	</section>
 
@@ -141,46 +123,48 @@ $products_label = sprintf(
 					<?php echo wp_kses_post( wpautop( $brand_categories_description ) ); ?>
 				</div>
 
-				<div class="bu-brand-categories__slider-wrap">
-					<div class="bu-brand-categories__slider js-bu-brand-categories-slider">
-						<?php
-						while ( $brand_slider_query->have_posts() ) :
-							$brand_slider_query->the_post();
+				<div class="bu-brand-categories__viewport">
+					<div class="bu-brand-categories__slider-wrap">
+						<div class="bu-brand-categories__slider js-bu-brand-categories-slider">
+							<?php
+							while ( $brand_slider_query->have_posts() ) :
+								$brand_slider_query->the_post();
 
-							$product_id        = get_the_ID();
-							$product_title     = get_the_title();
-							$product_permalink = get_permalink();
-							$product_image     = get_the_post_thumbnail(
-								$product_id,
-								'large',
-								array(
-									'alt'      => esc_attr( $product_title ),
-									'loading'  => 'lazy',
-									'decoding' => 'async',
-								)
-							);
-							$product_terms = get_the_terms( $product_id, 'bu-category' );
-							$product_term_ids = array();
+								$product_id        = get_the_ID();
+								$product_title     = get_the_title();
+								$product_permalink = get_permalink();
+								$product_image     = get_the_post_thumbnail(
+									$product_id,
+									'large',
+									array(
+										'alt'      => esc_attr( $product_title ),
+										'loading'  => 'lazy',
+										'decoding' => 'async',
+									)
+								);
+								$product_terms     = get_the_terms( $product_id, 'bu-category' );
+								$product_term_ids  = array();
 
-							if ( ! is_wp_error( $product_terms ) && ! empty( $product_terms ) ) {
-								$product_term_ids = wp_list_pluck( $product_terms, 'term_id' );
-							}
-							?>
-							<article class="bu-brand-categories__slide" data-category-ids="<?php echo esc_attr( implode( ',', array_map( 'intval', $product_term_ids ) ) ); ?>">
-								<div class="bu-brand-categories__card">
-									<a class="bu-brand-categories__media" href="<?php echo esc_url( $product_permalink ); ?>">
-										<?php if ( $product_image ) : ?>
-											<?php echo $product_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-										<?php endif; ?>
-									</a>
-									<a class="bu-brand-categories__more" href="<?php echo esc_url( $product_permalink ); ?>">
-										<span class="bu-brand-categories__more-text"><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
-									</a>
-									<h3 class="bu-brand-categories__item-title"><?php echo esc_html( $product_title ); ?></h3>
-								</div>
-							</article>
-						<?php endwhile; ?>
-						<?php wp_reset_postdata(); ?>
+								if ( ! is_wp_error( $product_terms ) && ! empty( $product_terms ) ) {
+									$product_term_ids = wp_list_pluck( $product_terms, 'term_id' );
+								}
+								?>
+								<article class="bu-brand-categories__slide" data-category-ids="<?php echo esc_attr( implode( ',', array_map( 'intval', $product_term_ids ) ) ); ?>">
+									<div class="bu-brand-categories__card">
+										<a class="bu-brand-categories__media" href="<?php echo esc_url( $product_permalink ); ?>">
+											<?php if ( $product_image ) : ?>
+												<?php echo $product_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+											<?php endif; ?>
+											<span class="bu-brand-categories__bubble" aria-hidden="true">
+												<span class="bu-brand-categories__bubble-text"><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
+											</span>
+										</a>
+										<h3 class="bu-brand-categories__item-title"><?php echo esc_html( $product_title ); ?></h3>
+									</div>
+								</article>
+							<?php endwhile; ?>
+							<?php wp_reset_postdata(); ?>
+						</div>
 					</div>
 				</div>
 
@@ -191,68 +175,53 @@ $products_label = sprintf(
 			</div>
 		</section>
 	<?php endif; ?>
-
-	<section class="bu-brand-products" aria-label="<?php esc_attr_e( 'BU brand products list', 'flipnewmedia' ); ?>">
-		<div class="container-ext">
-			<div class="bu-brand-products__head">
-				<p class="bu-brand-products__count"><?php echo esc_html( $products_label ); ?></p>
-			</div>
-
-			<?php if ( have_posts() ) : ?>
-				<div class="bu-brand-products__grid">
-					<?php
-					while ( have_posts() ) :
-						the_post();
-
-						$product_image = get_the_post_thumbnail(
-							get_the_ID(),
-							'large',
-							array(
-								'alt'      => esc_attr( get_the_title() ),
-								'loading'  => 'lazy',
-								'decoding' => 'async',
-							)
-						);
-						?>
-						<article <?php post_class( 'bu-brand-products__item' ); ?>>
-							<a class="bu-brand-products__card" href="<?php the_permalink(); ?>">
-								<div class="bu-brand-products__media">
-									<?php if ( $product_image ) : ?>
-										<?php echo $product_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-									<?php endif; ?>
-								</div>
-								<h2 class="bu-brand-products__title"><?php the_title(); ?></h2>
-							</a>
-						</article>
-					<?php endwhile; ?>
-				</div>
-
-				<div class="bu-brand-products__pagination">
-					<?php
-					the_posts_pagination(
-						array(
-							'mid_size'  => 1,
-							'prev_text' => __( 'Προηγούμενα', 'flipnewmedia' ),
-							'next_text' => __( 'Επόμενα', 'flipnewmedia' ),
-						)
-					);
-					?>
-				</div>
-			<?php else : ?>
-				<p class="bu-brand-products__empty"><?php esc_html_e( 'Δεν υπάρχουν διαθέσιμα προϊόντα για αυτό το brand.', 'flipnewmedia' ); ?></p>
-			<?php endif; ?>
-		</div>
-	</section>
 </main>
 
 <script>
 jQuery(function ($) {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  $(document)
+    .on('mouseenter', '.bu-brand-categories__card', function () {
+      $(this).addClass('is-cursor-active');
+    })
+    .on('mousemove', '.bu-brand-categories__card', function (event) {
+      var card = this;
+      var bubble = card.querySelector('.bu-brand-categories__bubble');
+      if (!bubble) return;
+
+      var rect = card.getBoundingClientRect();
+      var x = event.clientX - rect.left;
+      var y = event.clientY - rect.top;
+      var padX = bubble.offsetWidth / 2;
+      var padY = bubble.offsetHeight / 2;
+
+      x = Math.max(padX, Math.min(rect.width - padX, x));
+      y = Math.max(padY, Math.min(rect.height - padY, y));
+
+      bubble.style.left = x + 'px';
+      bubble.style.top = y + 'px';
+    })
+    .on('mouseleave', '.bu-brand-categories__card', function () {
+      $(this).removeClass('is-cursor-active');
+    });
+});
+</script>
+
+<script>
+jQuery(function ($) {
   var $slider = $('.js-bu-brand-categories-slider');
-  var $tabs = $('.bu-brand-categories__tab');
+  var $tabs = $('.bu-brand-categories__tabs');
+  var allSlidesHtml = $slider.html();
   if (!$slider.length || !$tabs.length) return;
+  if (typeof $.fn.slick !== 'function') {
+    $('.bu-brand-categories__progress-bar').css('width', '100%');
+    return;
+  }
 
   function updateProgress() {
-    var slick = $slider.slick('getSlick');
+    var sliderNode = $slider.get(0);
+    var slick = sliderNode && sliderNode.slick ? sliderNode.slick : null;
     if (!slick) return;
     var total = slick.slideCount || 1;
     var slidesToShow = typeof slick.options.slidesToShow === 'number' ? slick.options.slidesToShow : 1;
@@ -263,16 +232,19 @@ jQuery(function ($) {
   }
 
   function initSlider() {
-    if ($slider.hasClass('slick-initialized')) return;
+    if ($slider.hasClass('slick-initialized')) {
+      $slider.slick('unslick');
+    }
 
+    $slider.off('init afterChange');
     $slider.on('init afterChange', function () {
       updateProgress();
     });
 
     $slider.slick({
-      slidesToShow: 4,
+      slidesToShow: 3,
       slidesToScroll: 1,
-      infinite: false,
+      infinite: true,
       arrows: false,
       dots: false,
       responsive: [
@@ -298,32 +270,49 @@ jQuery(function ($) {
     });
   }
 
+  function getSlidesMarkup(categoryId) {
+    var $source = $('<div>').html(allSlidesHtml);
+
+    if (categoryId !== 'all') {
+      $source.find('.bu-brand-categories__slide').each(function () {
+        var ids = String($(this).attr('data-category-ids') || '').split(',');
+        if (ids.indexOf(categoryId) === -1) {
+          $(this).remove();
+        }
+      });
+    }
+
+    return $source.html();
+  }
+
   function applyFilter(categoryId) {
-    if (!$slider.hasClass('slick-initialized')) return;
+    var filteredMarkup = getSlidesMarkup(categoryId);
 
-    $slider.slick('slickUnfilter');
+    if ($slider.hasClass('slick-initialized')) {
+      $slider.slick('unslick');
+    }
 
-    if (categoryId === 'all') {
-      updateProgress();
+    $slider.html(filteredMarkup);
+
+    if (!$slider.children('.bu-brand-categories__slide').length) {
+      $('.bu-brand-categories__progress-bar').css('width', '0');
       return;
     }
 
-    $slider.slick('slickFilter', function () {
-      var ids = ($(this).attr('data-category-ids') || '').split(',');
-      return ids.indexOf(categoryId) !== -1;
-    });
-
-    $slider.slick('slickGoTo', 0, true);
+    initSlider();
+    if ($slider.hasClass('slick-initialized')) {
+      $slider.slick('slickGoTo', 0, true);
+    }
     updateProgress();
   }
 
-  initSlider();
+  applyFilter('all');
 
-  $tabs.on('click', function () {
+  $tabs.on('click', '.bu-brand-categories__tab', function () {
     var $tab = $(this);
     var categoryId = String($tab.data('category-tab'));
 
-    $tabs.removeClass('is-active').attr('aria-selected', 'false');
+    $tabs.find('.bu-brand-categories__tab').removeClass('is-active').attr('aria-selected', 'false');
     $tab.addClass('is-active').attr('aria-selected', 'true');
 
     applyFilter(categoryId);

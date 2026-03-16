@@ -11,7 +11,6 @@ while ( have_posts() ) :
 	the_post();
 
 	$product_id = get_the_ID();
-	$related_cursor_asset = trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/Frame-2.svg';
 	$image_to_url = static function ( $image, $size = 'large' ) {
 		if ( is_array( $image ) && ! empty( $image['url'] ) ) {
 			return $image['url'];
@@ -217,7 +216,11 @@ while ( have_posts() ) :
 						<?php if ( $pdf_url ) : ?>
 							<a class="bu-product-hero__button bu-product-hero__button--pdf" href="<?php echo esc_url( $pdf_url ); ?>" target="_blank" rel="noopener">
 								<span><?php echo esc_html( $pdf_label ); ?></span>
-								<span class="bu-product-hero__button-icon" aria-hidden="true"></span>
+								<span class="bu-product-hero__button-icon" aria-hidden="true">
+									<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M25 11.175C24.987 11.0602 24.9618 10.947 24.925 10.8375V10.725C24.8649 10.5965 24.7847 10.4783 24.6875 10.375L17.1875 2.875C17.0842 2.77777 16.966 2.6976 16.8375 2.6375H16.725L16.325 2.5H8.75C7.75544 2.5 6.80161 2.89509 6.09835 3.59835C5.39509 4.30161 5 5.25544 5 6.25V23.75C5 24.7446 5.39509 25.6984 6.09835 26.4017C6.80161 27.1049 7.75544 27.5 8.75 27.5H21.25C22.2446 27.5 23.1984 27.1049 23.9017 26.4017C24.6049 25.6984 25 24.7446 25 23.75V11.25C25 11.25 25 11.25 25 11.175ZM17.5 6.7625L20.7375 10H17.5V6.7625ZM22.5 23.75C22.5 24.0815 22.3683 24.3995 22.1339 24.6339C21.8995 24.8683 21.5815 25 21.25 25H8.75C8.41848 25 8.10054 24.8683 7.86612 24.6339C7.6317 24.3995 7.5 24.0815 7.5 23.75V6.25C7.5 5.91848 7.6317 5.60054 7.86612 5.36612C8.10054 5.1317 8.41848 5 8.75 5H15V11.25C15 11.5815 15.1317 11.8995 15.3661 12.1339C15.6005 12.3683 15.9185 12.5 16.25 12.5H22.5V23.75Z" fill="white"/>
+									</svg>
+								</span>
 							</a>
 						<?php endif; ?>
 
@@ -236,7 +239,8 @@ while ( have_posts() ) :
 				<div class="container-ext">
 					<h2 class="bu-product-related__title" data-node-id="642:4608"><?php esc_html_e( 'Περισσότερες επιλογές', 'flipnewmedia' ); ?></h2>
 
-					<div class="bu-product-related__slider js-bu-product-related-slider">
+					<div class="bu-product-related__viewport">
+						<div class="bu-product-related__slider js-bu-product-related-slider">
 						<?php
 						while ( $related_products->have_posts() ) :
 							$related_products->the_post();
@@ -258,7 +262,7 @@ while ( have_posts() ) :
 											<?php echo $related_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 										<?php endif; ?>
 									</a>
-									<a class="bu-product-related__more" href="<?php the_permalink(); ?>" aria-hidden="true" tabindex="-1" style="background-image:url('<?php echo esc_url( $related_cursor_asset ); ?>');">
+									<a class="bu-product-related__more" href="<?php the_permalink(); ?>" aria-hidden="true" tabindex="-1">
 										<span class="bu-product-related__more-text"><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
 									</a>
 									<h3 class="bu-product-related__item-title"><?php the_title(); ?></h3>
@@ -266,6 +270,7 @@ while ( have_posts() ) :
 							</article>
 						<?php endwhile; ?>
 						<?php wp_reset_postdata(); ?>
+						</div>
 					</div>
 				</div>
 			</section>
@@ -446,9 +451,9 @@ while ( have_posts() ) :
 	    if (!$slider.length || $slider.hasClass('slick-initialized')) return;
 
 	    $slider.slick({
-	      slidesToShow: 4,
+	      slidesToShow: 3,
 	      slidesToScroll: 1,
-	      infinite: false,
+	      infinite: true,
 	      arrows: false,
 	      dots: false,
 	      responsive: [
@@ -532,7 +537,7 @@ while ( have_posts() ) :
 	    if (!$slider.length || $slider.hasClass('slick-initialized')) return;
 
 	    $slider.slick({
-	      slidesToShow: 5,
+	      slidesToShow: 4,
 	      slidesToScroll: 1,
 	      infinite: true,
 	      arrows: false,

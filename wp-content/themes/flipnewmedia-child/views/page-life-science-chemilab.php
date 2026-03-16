@@ -34,6 +34,8 @@ if ( ! function_exists( 'lsc_template_image_url' ) ) {
 	}
 }
 
+$upload_dir           = wp_get_upload_dir();
+$hero_video_url       = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/3940140663-preview.mp4';
 $hero_image_url       = '';
 $hero_title           = '';
 $hero_copy            = '';
@@ -113,6 +115,9 @@ if ( function_exists( 'get_field' ) ) {
   <?php if ( '' !== $hero_image_url || '' !== $hero_title || '' !== $hero_copy ) : ?>
   <section class="lsc-chemilab-hero figma-node-642-4715" data-node-id="642:4715">
     <div class="lsc-chemilab-hero__media" style="background-image:url('<?php echo esc_url( $hero_image_url ); ?>');">
+      <video class="lsc-chemilab-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="<?php echo esc_url( $hero_video_url ); ?>" type="video/mp4">
+      </video>
       <div class="lsc-chemilab-hero__overlay figma-node-642-4717" data-node-id="642:4717" aria-hidden="true"></div>
       <div class="container-ext lsc-chemilab-hero__content">
         <div class="lsc-chemilab-hero__grid">
@@ -147,7 +152,7 @@ if ( function_exists( 'get_field' ) ) {
     </div>
     <?php endif; ?>
 
-    <div class="container-ext lsc-chemilab-story__panel-wrap">
+    <div class="lsc-chemilab-story__panel-wrap">
       <div class="lsc-chemilab-story__panel">
         <button class="lsc-chemilab-story__arrow lsc-chemilab-story__arrow--prev" type="button" aria-label="<?php esc_attr_e( 'Previous story milestone', 'flipnewmedia' ); ?>">
           <span aria-hidden="true"></span>

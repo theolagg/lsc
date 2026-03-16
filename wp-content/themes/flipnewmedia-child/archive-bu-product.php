@@ -27,7 +27,8 @@ while ( count( $term_columns ) < 3 ) {
 $hero_title    = __( 'Εξοπλισμος / Επιστημονικα οργανα', 'flipnewmedia' );
 $hero_label    = __( 'ΚΑΤΗΓΟΡΙΕΣ', 'flipnewmedia' );
 $empty_message = __( 'Δεν υπάρχουν ακόμη κατηγορίες για BU Products.', 'flipnewmedia' );
-$feature_image = trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/1080365813-preview-1.png';
+$hero_video    = trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/1009729562-preview.mp4';
+$feature_video = trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/3569576413-preview.mp4';
 $latest_products_query = new WP_Query(
 	array(
 		'post_type'           => 'bu-product',
@@ -52,6 +53,9 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 <main id="primary" class="site-main bu-products-archive">
 	<section class="bu-products-hero figma-node-712-36" data-node-id="712:36" aria-label="<?php esc_attr_e( 'BU products categories', 'flipnewmedia' ); ?>">
 		<div class="bu-products-hero__bg" aria-hidden="true"></div>
+		<video class="bu-products-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+			<source src="<?php echo esc_url( $hero_video ); ?>" type="video/mp4">
+		</video>
 		<div class="bu-products-hero__overlay" aria-hidden="true"></div>
 
 		<div class="container-ext bu-products-hero__inner">
@@ -144,7 +148,11 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 	</section>
 
 	<section class="bu-products-feature figma-node-642-5317" data-node-id="642:5317" aria-label="<?php esc_attr_e( 'BU products feature visual', 'flipnewmedia' ); ?>">
-		<div class="bu-products-feature__media" style="background-image:url('<?php echo esc_url( $feature_image ); ?>');"></div>
+		<div class="bu-products-feature__media">
+			<video class="bu-products-feature__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+				<source src="<?php echo esc_url( $feature_video ); ?>" type="video/mp4">
+			</video>
+		</div>
 	</section>
 
 	<?php if ( $latest_products_query->have_posts() ) : ?>
@@ -291,8 +299,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 jQuery(function ($) {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  $(document)
+    .on('mouseenter', '.bu-products-latest__media', function () {
+      $(this).addClass('is-cursor-active');
+    })
+    .on('mousemove', '.bu-products-latest__media', function (event) {
+      var media = this;
+      var bubble = media.querySelector('.bu-products-latest__bubble');
+      if (!bubble) return;
+
+      var rect = media.getBoundingClientRect();
+      var x = event.clientX - rect.left;
+      var y = event.clientY - rect.top;
+      var padX = bubble.offsetWidth / 2;
+      var padY = bubble.offsetHeight / 2;
+
+      x = Math.max(padX, Math.min(rect.width - padX, x));
+      y = Math.max(padY, Math.min(rect.height - padY, y));
+
+      bubble.style.left = x + 'px';
+      bubble.style.top = y + 'px';
+    })
+    .on('mouseleave', '.bu-products-latest__media', function () {
+      $(this).removeClass('is-cursor-active');
+    });
+});
+</script>
+
+<script>
+jQuery(function ($) {
   var $slider = $('.js-bu-products-latest-slider');
   if (!$slider.length) return;
+  if (typeof $.fn.slick !== 'function') {
+    $('.bu-products-latest__progress-bar').css('width', '100%');
+    return;
+  }
+  if ($slider.hasClass('slick-initialized')) return;
 
   function updateProgress(slick, currentSlide) {
     var total = slick.slideCount || 1;
@@ -312,9 +356,9 @@ jQuery(function ($) {
   });
 
   $slider.slick({
-    slidesToShow: 4,
+    slidesToShow: 3,
     slidesToScroll: 1,
-    infinite: false,
+    infinite: true,
     arrows: true,
     dots: false,
     variableWidth: false,
@@ -348,9 +392,11 @@ jQuery(function ($) {
 jQuery(function ($) {
   var $slider = $('.js-bu-brands-slider');
   if (!$slider.length) return;
+  if (typeof $.fn.slick !== 'function') return;
+  if ($slider.hasClass('slick-initialized')) return;
 
   $slider.slick({
-    slidesToShow: 5,
+    slidesToShow: 4,
     slidesToScroll: 1,
     infinite: true,
     arrows: false,
@@ -381,3 +427,6 @@ jQuery(function ($) {
   });
 });
 </script>
+
+<?php
+get_footer();

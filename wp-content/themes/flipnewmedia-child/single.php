@@ -7,6 +7,30 @@
 
 get_header();
 
+if ( ! function_exists( 'lsc_get_current_single_post' ) ) {
+	/**
+	 * Resolve the current single post as strictly as possible from the URL slug.
+	 *
+	 * @return WP_Post|null
+	 */
+	function lsc_get_current_single_post() {
+		$queried_post = get_post( get_queried_object_id() );
+		$request_uri  = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$request_path = $request_uri ? (string) wp_parse_url( $request_uri, PHP_URL_PATH ) : '';
+		$request_slug = $request_path ? basename( untrailingslashit( $request_path ) ) : '';
+		$request_slug = sanitize_title_for_query( $request_slug );
+
+		if ( '' !== $request_slug ) {
+			$slug_post = get_page_by_path( $request_slug, OBJECT, 'post' );
+			if ( $slug_post instanceof WP_Post ) {
+				return $slug_post;
+			}
+		}
+
+		return $queried_post instanceof WP_Post ? $queried_post : null;
+	}
+}
+
 if ( ! function_exists( 'lsc_single_post_related_items' ) ) {
 	/**
 	 * Build related posts list from same categories.
@@ -55,42 +79,66 @@ if ( ! function_exists( 'lsc_single_post_related_items' ) ) {
 		$results = array_merge( $results, $fallback_query->posts );
 		wp_reset_postdata();
 
-		return $results;
+		$results = array_values(
+			array_filter(
+				$results,
+				static function ( $item ) {
+					return $item instanceof WP_Post;
+				}
+			)
+		);
+
+		$unique_results = array();
+		$seen_ids       = array();
+
+		foreach ( $results as $item ) {
+			if ( in_array( (int) $item->ID, $seen_ids, true ) ) {
+				continue;
+			}
+
+			$seen_ids[]       = (int) $item->ID;
+			$unique_results[] = $item;
+
+			if ( count( $unique_results ) >= 3 ) {
+				break;
+			}
+		}
+
+		return $unique_results;
 	}
 }
 ?>
 
 <main id="primary" class="site-main single-post-page">
-	<?php if ( have_posts() ) : ?>
-		<?php
-		while ( have_posts() ) :
-			the_post();
+	<?php
+	$current_post = lsc_get_current_single_post();
 
-			$post_id         = get_the_ID();
+	if ( $current_post instanceof WP_Post ) :
+		global $post;
+		$post = $current_post;
+		setup_postdata( $post );
+
+			$post_id         = (int) $current_post->ID;
 			$back_url        = get_permalink( (int) get_option( 'page_for_posts' ) );
 			$back_url        = $back_url ? $back_url : home_url( '/' );
 			$related_posts   = lsc_single_post_related_items( $post_id );
-			$hero_copy       = get_the_excerpt();
-			if ( ! $hero_copy ) {
-				$hero_copy = wp_trim_words( wp_strip_all_tags( get_the_content() ), 32, '...' );
-			}
 			$body_image_html = get_the_post_thumbnail(
 				$post_id,
 				'full',
 				array(
-					'alt'      => esc_attr( get_the_title() ),
+					'alt'      => esc_attr( get_the_title( $post_id ) ),
 					'loading'  => 'eager',
 					'decoding' => 'async',
 				)
 			);
 			?>
 
-			<article id="post-<?php the_ID(); ?>" <?php post_class( 'single-post-layout' ); ?>>
+			<article id="post-<?php echo esc_attr( $post_id ); ?>" <?php post_class( 'single-post-layout', $post_id ); ?>>
 				<?php
 				echo lsc_render_video_hero(
 					array(
-						'title'         => get_the_title(),
-						'copy'          => $hero_copy,
+						'title'         => get_the_title( $post_id ),
+						'copy'          => '',
 						'aria_label'    => __( 'Article introduction', 'flipnewmedia' ),
 						'section_class' => 'single-post-hero figma-node-712-33',
 						'inner_class'   => 'single-post-hero__inner',
@@ -184,7 +232,7 @@ if ( ! function_exists( 'lsc_single_post_related_items' ) ) {
 					</section>
 				<?php endif; ?>
 			</article>
-		<?php endwhile; ?>
+		<?php wp_reset_postdata(); ?>
 	<?php endif; ?>
 </main>
 

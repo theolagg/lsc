@@ -64,6 +64,11 @@ function my_scripts_method() {
 	wp_localize_script( 'ajax-script', 'my_ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
 	wp_enqueue_style( 'custom-style', 'https://use.typekit.net/ycj4dqx.css' );
 	wp_enqueue_style( 'simplebar.css', 'https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.css');
+	wp_enqueue_script( 'slick.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js', array( 'jquery' ), null, true );
+	wp_enqueue_script( 'slick-lightbox.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-lightbox/0.2.12/slick-lightbox.min.js', array( 'jquery', 'slick.js' ), null, true );
+	wp_enqueue_script( 'website.js', get_stylesheet_directory_uri() . '/js/website.js?v=1.20', array( 'jquery', 'slick.js' ), null, true );
+	wp_enqueue_script( 'jssocials.js', 'https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js', array( 'jquery' ), null, true );
+	wp_enqueue_script( 'simplebar.min.js', 'https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.min.js', array(), null, true );
 	 wp_localize_script('product-comparison', 'product_comparison_ajax', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
     ));
@@ -71,23 +76,6 @@ function my_scripts_method() {
 	
 }
 add_action( 'wp_enqueue_scripts', 'my_scripts_method' );
-
-function enqueue_scripts_to_footer() {
-	wp_enqueue_script('jquery');
-	//wp_enqueue_script('sticky.js', 'https://cdnjs.cloudflare.com/ajax/libs/jquery.sticky/1.0.4/jquery.sticky.min.js');
-	wp_enqueue_script('slick.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js');
-	wp_enqueue_script('slick-lightbox.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-lightbox/0.2.12/slick-lightbox.min.js');
-	wp_enqueue_script('website.js', get_stylesheet_directory_uri() . '/js/website.js?v=1.20', array( 'jquery' ));
-	wp_enqueue_script('jssocials.js', 'https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js');
-	//wp_enqueue_script('select2.min.js', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js');
-	//wp_enqueue_script('fancybox.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js');
-	//wp_enqueue_script('gsap.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.4/gsap.min.js');
-	//wp_enqueue_script('ScrollTrigger.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.4/ScrollTrigger.min.js');
-	wp_enqueue_script('simplebar.min.js', 'https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.min.js');
-	//wp_enqueue_script('minicart', get_stylesheet_directory_uri() . '/js/minicart.js', array( 'jquery' ));
-	//wp_enqueue_script('rangeslider', get_stylesheet_directory_uri() . '/js/rangeslider.js', array( 'jquery' ));
-}
-add_action( 'wp_footer', 'enqueue_scripts_to_footer' );
 
 
  function footer_widgets() {
@@ -647,7 +635,6 @@ function lsc_render_blog_archive_card( $post_id, $is_featured = false ) {
 			<?php if ( $image_markup ) : ?>
 				<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php endif; ?>
-			<span class="home-news-card-arrow" aria-hidden="true"></span>
 		</a>
 
 		<div class="home-news-card-copy blog-archive-card__copy">
@@ -657,6 +644,9 @@ function lsc_render_blog_archive_card( $post_id, $is_featured = false ) {
 			<?php if ( $excerpt ) : ?>
 				<p class="home-news-card-excerpt blog-archive-card__excerpt"><?php echo esc_html( $excerpt ); ?></p>
 			<?php endif; ?>
+			<div class="home-news-card-footer blog-archive-card__footer">
+				<a class="home-news-card-arrow" href="<?php echo esc_url( $permalink ); ?>" aria-label="<?php echo esc_attr__( 'Read more', 'flipnewmedia' ); ?>"></a>
+			</div>
 		</div>
 	</article>
 	<?php
