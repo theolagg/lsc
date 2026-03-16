@@ -7,9 +7,6 @@
 
 get_header();
 
-$upload_dir              = wp_get_upload_dir();
-$career_background_image = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
-
 $career_query = new WP_Query(
 	array(
 		'post_type'      => 'career',
@@ -24,24 +21,26 @@ $lang        = defined( 'ICL_LANGUAGE_CODE' ) ? ICL_LANGUAGE_CODE : 'el';
 
 $copy = array(
 	'el' => array(
-		'eyebrow'      => 'ΚΑΡΙΕΡΑ',
-		'title'        => 'ΑΝΑΚΑΛΥΨΤΕ ΤΟ ΜΕΛΛΟΝ ΣΑΣ',
-		'lead'         => 'Ως μια συνεχώς αναπτυσσόμενη εταιρεία, η Life Science Chemilab Α.Ε. αναζητά διαρκώς υψηλής ποιότητας προσωπικό με εμπειρία στις πωλήσεις νοσοκομειακού και εργαστηριακού εξοπλισμού και αναλωσίμων.',
-		'copy'         => 'Παρακαλούμε όπως αποστείλετε το βιογραφικό σας στη διεύθυνση info@lsc.gr. Το βιογραφικό σας θα φυλαχθεί σε αρχείο για την αξιολόγησή του μόλις παρουσιαστεί ευκαιρία πλήρωσης θέσεως.',
-		'email_label'  => 'info@lsc.gr',
-		'date_label'   => 'Ημερομηνία δημιουργίας:',
-		'empty_title'  => 'Δεν υπάρχουν διαθέσιμες θέσεις αυτή τη στιγμή.',
-		'empty_copy'   => 'Μπορείτε να μας στείλετε το βιογραφικό σας και θα επικοινωνήσουμε μαζί σας όταν ανοίξει η κατάλληλη θέση.',
+		'eyebrow'     => 'ΚΑΡΙΕΡΑ',
+		'title'       => "ΑΝΑΚΑΛΥΨΤΕ ΤΟ\nΜΕΛΛΟΝ ΣΑΣ",
+		'lead'        => 'Ως μια συνεχώς αναπτυσσόμενη εταιρεία, η Life Science Chemilab Α.Ε. αναζητά διαρκώς υψηλής ποιότητας προσωπικό με εμπειρία στις πωλήσεις νοσοκομειακού και εργαστηριακού εξοπλισμού και αναλωσίμων.',
+		'copy'        => 'Παρακαλούμε όπως αποστείλετε το βιογραφικό σας στη διεύθυνση %s',
+		'copy_tail'   => 'Το βιογραφικό σας θα φυλαχθεί σε αρχείο για την αξιολόγησή του μόλις παρουσιαστεί ευκαιρία πλήρωσης θέσεως.',
+		'email_label' => 'info@lsc.gr',
+		'date_label'  => 'Ημερομηνία δημιουργίας:',
+		'empty_title' => 'Δεν υπάρχουν διαθέσιμες θέσεις αυτή τη στιγμή.',
+		'empty_copy'  => 'Μπορείτε να μας στείλετε το βιογραφικό σας και θα επικοινωνήσουμε μαζί σας όταν ανοίξει η κατάλληλη θέση.',
 	),
 	'en' => array(
-		'eyebrow'      => 'CAREER',
-		'title'        => 'DISCOVER YOUR FUTURE',
-		'lead'         => 'As a continuously growing company, Life Science Chemilab S.A. is consistently looking for high-quality professionals with experience in hospital and laboratory equipment and consumables sales.',
-		'copy'         => 'Please send your CV to info@lsc.gr. Your CV will be kept on file and reviewed as soon as a suitable position becomes available.',
-		'email_label'  => 'info@lsc.gr',
-		'date_label'   => 'Creation date:',
-		'empty_title'  => 'There are no open positions at the moment.',
-		'empty_copy'   => 'You can still send us your CV and we will contact you when a suitable role opens.',
+		'eyebrow'     => 'CAREER',
+		'title'       => "DISCOVER YOUR\nFUTURE",
+		'lead'        => 'As a continuously growing company, Life Science Chemilab S.A. is consistently looking for high-quality professionals with experience in hospital and laboratory equipment and consumables sales.',
+		'copy'        => 'Please send your CV to %s',
+		'copy_tail'   => 'Your CV will be kept on file and reviewed as soon as a suitable position becomes available.',
+		'email_label' => 'info@lsc.gr',
+		'date_label'  => 'Creation date:',
+		'empty_title' => 'There are no open positions at the moment.',
+		'empty_copy'  => 'You can still send us your CV and we will contact you when a suitable role opens.',
 	),
 );
 
@@ -49,37 +48,46 @@ $content = isset( $copy[ $lang ] ) ? $copy[ $lang ] : $copy['el'];
 ?>
 
 <main id="primary" class="site-main career-archive">
-	<div class="container-ext career-archive__breadcrumbs">
-		<?php
-		if ( function_exists( 'yoast_breadcrumb' ) ) {
-			yoast_breadcrumb( '<p id="breadcrumbs">', '</p>' );
-		}
-		?>
-	</div>
+	<?php
+	echo lsc_render_video_hero(
+		array(
+			'title'         => $content['eyebrow'],
+			'copy'          => '',
+			'aria_label'    => __( 'Career archive', 'flipnewmedia' ),
+			'section_class' => 'career-archive__hero',
+			'inner_class'   => 'career-archive__hero-inner',
+		)
+	);
+	?>
 
-	<section class="career-archive__hero" aria-label="<?php esc_attr_e( 'Career archive', 'flipnewmedia' ); ?>">
-		<div class="career-archive__heading-band">
-			<div class="career-archive__visual" aria-hidden="true">
-				<div class="career-archive__visual-media" style="background-image:url('<?php echo esc_url( $career_background_image ); ?>');"></div>
-			</div>
-			<div class="container-ext">
-				<div class="career-archive__heading">
-					<p class="career-archive__eyebrow"><?php echo esc_html( $content['eyebrow'] ); ?></p>
-					<div class="career-archive__rule" aria-hidden="true"></div>
-				</div>
-			</div>
-		</div>
-
+	<section class="career-archive__content-wrap">
 		<div class="container-ext career-archive__content">
 			<div class="career-archive__layout">
 				<div class="career-archive__intro-column">
 					<div id="career-archive-intro" class="career-archive__intro">
-						<h1 class="career-archive__title"><?php echo esc_html( $content['title'] ); ?></h1>
+						<h1 class="career-archive__title"><?php echo nl2br( esc_html( $content['title'] ) ); ?></h1>
 						<p class="career-archive__lead"><?php echo esc_html( $content['lead'] ); ?></p>
 						<p class="career-archive__copy">
-							<?php echo esc_html( wp_strip_all_tags( $content['copy'] ) ); ?>
-							<a href="mailto:<?php echo esc_attr( antispambot( $content['email_label'] ) ); ?>" class="career-archive__email"><?php echo esc_html( $content['email_label'] ); ?></a>
+							<?php
+							printf(
+								wp_kses(
+									$content['copy'],
+									array(
+										'a' => array(
+											'href'  => array(),
+											'class' => array(),
+										),
+									)
+								),
+								sprintf(
+									'<a href="mailto:%1$s" class="career-archive__email">%2$s</a>',
+									esc_attr( antispambot( $content['email_label'] ) ),
+									esc_html( $content['email_label'] )
+								)
+							);
+							?>
 						</p>
+						<p class="career-archive__copy"><?php echo esc_html( $content['copy_tail'] ); ?></p>
 					</div>
 				</div>
 

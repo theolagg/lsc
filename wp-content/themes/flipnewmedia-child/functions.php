@@ -64,6 +64,11 @@ function my_scripts_method() {
 	wp_localize_script( 'ajax-script', 'my_ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
 	wp_enqueue_style( 'custom-style', 'https://use.typekit.net/ycj4dqx.css' );
 	wp_enqueue_style( 'simplebar.css', 'https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.css');
+	wp_enqueue_script( 'slick.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js', array( 'jquery' ), null, true );
+	wp_enqueue_script( 'slick-lightbox.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-lightbox/0.2.12/slick-lightbox.min.js', array( 'jquery', 'slick.js' ), null, true );
+	wp_enqueue_script( 'website.js', get_stylesheet_directory_uri() . '/js/website.js?v=1.20', array( 'jquery', 'slick.js' ), null, true );
+	wp_enqueue_script( 'jssocials.js', 'https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js', array( 'jquery' ), null, true );
+	wp_enqueue_script( 'simplebar.min.js', 'https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.min.js', array(), null, true );
 	 wp_localize_script('product-comparison', 'product_comparison_ajax', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
     ));
@@ -71,23 +76,6 @@ function my_scripts_method() {
 	
 }
 add_action( 'wp_enqueue_scripts', 'my_scripts_method' );
-
-function enqueue_scripts_to_footer() {
-	wp_enqueue_script('jquery');
-	//wp_enqueue_script('sticky.js', 'https://cdnjs.cloudflare.com/ajax/libs/jquery.sticky/1.0.4/jquery.sticky.min.js');
-	wp_enqueue_script('slick.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js');
-	wp_enqueue_script('slick-lightbox.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/slick-lightbox/0.2.12/slick-lightbox.min.js');
-	wp_enqueue_script('website.js', get_stylesheet_directory_uri() . '/js/website.js?v=1.20', array( 'jquery' ));
-	wp_enqueue_script('jssocials.js', 'https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js');
-	//wp_enqueue_script('select2.min.js', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js');
-	//wp_enqueue_script('fancybox.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js');
-	//wp_enqueue_script('gsap.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.4/gsap.min.js');
-	//wp_enqueue_script('ScrollTrigger.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.4/ScrollTrigger.min.js');
-	wp_enqueue_script('simplebar.min.js', 'https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.min.js');
-	//wp_enqueue_script('minicart', get_stylesheet_directory_uri() . '/js/minicart.js', array( 'jquery' ));
-	//wp_enqueue_script('rangeslider', get_stylesheet_directory_uri() . '/js/rangeslider.js', array( 'jquery' ));
-}
-add_action( 'wp_footer', 'enqueue_scripts_to_footer' );
 
 
  function footer_widgets() {
@@ -386,6 +374,101 @@ function lsc_register_career_post_type() {
 }
 add_action( 'init', 'lsc_register_career_post_type' );
 
+function lsc_register_bu_products_content_types() {
+	$post_type_labels = array(
+		'name'                  => __( 'BU Products', 'flipnewmedia' ),
+		'singular_name'         => __( 'BU Product', 'flipnewmedia' ),
+		'menu_name'             => __( 'BU Products', 'flipnewmedia' ),
+		'name_admin_bar'        => __( 'BU Product', 'flipnewmedia' ),
+		'add_new'               => __( 'Add New', 'flipnewmedia' ),
+		'add_new_item'          => __( 'Add New BU Product', 'flipnewmedia' ),
+		'new_item'              => __( 'New BU Product', 'flipnewmedia' ),
+		'edit_item'             => __( 'Edit BU Product', 'flipnewmedia' ),
+		'view_item'             => __( 'View BU Product', 'flipnewmedia' ),
+		'all_items'             => __( 'All BU Products', 'flipnewmedia' ),
+		'search_items'          => __( 'Search BU Products', 'flipnewmedia' ),
+		'not_found'             => __( 'No BU products found.', 'flipnewmedia' ),
+		'not_found_in_trash'    => __( 'No BU products found in Trash.', 'flipnewmedia' ),
+		'archives'              => __( 'BU Product Archives', 'flipnewmedia' ),
+		'attributes'            => __( 'BU Product Attributes', 'flipnewmedia' ),
+		'insert_into_item'      => __( 'Insert into BU product', 'flipnewmedia' ),
+		'uploaded_to_this_item' => __( 'Uploaded to this BU product', 'flipnewmedia' ),
+	);
+
+	$post_type_args = array(
+		'labels'              => $post_type_labels,
+		'public'              => true,
+		'has_archive'         => true,
+		'show_in_rest'        => true,
+		'menu_icon'           => 'dashicons-products',
+		'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail' ),
+		'rewrite'             => array( 'slug' => 'bu-products', 'with_front' => false ),
+		'publicly_queryable'  => true,
+		'show_ui'             => true,
+		'show_in_nav_menus'   => true,
+		'exclude_from_search' => false,
+		'taxonomies'          => array( 'bu-category', 'bu-brand' ),
+	);
+
+	register_post_type( 'bu-product', $post_type_args );
+
+	$category_labels = array(
+		'name'              => __( 'BU Categories', 'flipnewmedia' ),
+		'singular_name'     => __( 'BU Category', 'flipnewmedia' ),
+		'search_items'      => __( 'Search BU Categories', 'flipnewmedia' ),
+		'all_items'         => __( 'All BU Categories', 'flipnewmedia' ),
+		'parent_item'       => __( 'Parent BU Category', 'flipnewmedia' ),
+		'parent_item_colon' => __( 'Parent BU Category:', 'flipnewmedia' ),
+		'edit_item'         => __( 'Edit BU Category', 'flipnewmedia' ),
+		'update_item'       => __( 'Update BU Category', 'flipnewmedia' ),
+		'add_new_item'      => __( 'Add New BU Category', 'flipnewmedia' ),
+		'new_item_name'     => __( 'New BU Category Name', 'flipnewmedia' ),
+		'menu_name'         => __( 'BU Categories', 'flipnewmedia' ),
+	);
+
+	register_taxonomy(
+		'bu-category',
+		array( 'bu-product' ),
+		array(
+			'labels'            => $category_labels,
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_in_rest'      => true,
+			'show_admin_column' => true,
+			'rewrite'           => array( 'slug' => 'bu-categories', 'with_front' => false ),
+		)
+	);
+
+	$brand_labels = array(
+		'name'                       => __( 'BU Brands', 'flipnewmedia' ),
+		'singular_name'              => __( 'BU Brand', 'flipnewmedia' ),
+		'search_items'               => __( 'Search BU Brands', 'flipnewmedia' ),
+		'all_items'                  => __( 'All BU Brands', 'flipnewmedia' ),
+		'edit_item'                  => __( 'Edit BU Brand', 'flipnewmedia' ),
+		'update_item'                => __( 'Update BU Brand', 'flipnewmedia' ),
+		'add_new_item'               => __( 'Add New BU Brand', 'flipnewmedia' ),
+		'new_item_name'              => __( 'New BU Brand Name', 'flipnewmedia' ),
+		'separate_items_with_commas' => __( 'Separate BU brands with commas', 'flipnewmedia' ),
+		'add_or_remove_items'        => __( 'Add or remove BU brands', 'flipnewmedia' ),
+		'choose_from_most_used'      => __( 'Choose from the most used BU brands', 'flipnewmedia' ),
+		'menu_name'                  => __( 'BU Brands', 'flipnewmedia' ),
+	);
+
+	register_taxonomy(
+		'bu-brand',
+		array( 'bu-product' ),
+		array(
+			'labels'            => $brand_labels,
+			'public'            => true,
+			'hierarchical'      => false,
+			'show_in_rest'      => true,
+			'show_admin_column' => true,
+			'rewrite'           => array( 'slug' => 'bu-brand', 'with_front' => false ),
+		)
+	);
+}
+add_action( 'init', 'lsc_register_bu_products_content_types' );
+
 function lsc_career_application_redirect_url( $status, $post_id ) {
 	$target = $post_id ? get_permalink( $post_id ) : home_url( '/career/' );
 
@@ -473,3 +556,208 @@ function lsc_handle_career_application_submit() {
 }
 add_action( 'admin_post_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
 add_action( 'admin_post_nopriv_lsc_career_application_submit', 'lsc_handle_career_application_submit' );
+
+/**
+ * Blog archive helpers.
+ */
+function lsc_get_blog_archive_tabs() {
+	$terms = get_categories(
+		array(
+			'taxonomy'   => 'category',
+			'hide_empty' => true,
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		)
+	);
+
+	$tabs = array(
+		array(
+			'slug'  => 'all',
+			'label' => __( 'Όλα', 'flipnewmedia' ),
+			'id'    => 0,
+		),
+	);
+
+	if ( empty( $terms ) || is_wp_error( $terms ) ) {
+		return $tabs;
+	}
+
+	foreach ( $terms as $term ) {
+		$tabs[] = array(
+			'slug'  => 'cat-' . (int) $term->term_id,
+			'label' => $term->name,
+			'id'    => (int) $term->term_id,
+		);
+	}
+
+	return $tabs;
+}
+
+function lsc_get_blog_archive_query_args( $term_id = 0, $posts_per_page = 11, $offset = 0 ) {
+	$args = array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'ignore_sticky_posts' => true,
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'posts_per_page'      => max( 1, (int) $posts_per_page ),
+		'offset'              => max( 0, (int) $offset ),
+	);
+
+	if ( $term_id > 0 ) {
+		$args['cat'] = (int) $term_id;
+	}
+
+	return $args;
+}
+
+function lsc_render_blog_archive_card( $post_id, $is_featured = false ) {
+	$post_id      = (int) $post_id;
+	$title        = get_the_title( $post_id );
+	$permalink    = get_permalink( $post_id );
+	$excerpt      = wp_trim_words( wp_strip_all_tags( get_the_excerpt( $post_id ) ), $is_featured ? 18 : 14, '...' );
+	$image_markup = get_the_post_thumbnail(
+		$post_id,
+		'full',
+		array(
+			'alt'      => esc_attr( $title ),
+			'loading'  => 'lazy',
+			'decoding' => 'async',
+		)
+	);
+	$classes = 'home-news-card blog-archive-card';
+	$classes .= $is_featured ? ' blog-archive-card--featured' : ' blog-archive-card--regular';
+
+	ob_start();
+	?>
+	<article <?php post_class( $classes, $post_id ); ?>>
+		<a class="home-news-card-media blog-archive-card__media" href="<?php echo esc_url( $permalink ); ?>" aria-label="<?php echo esc_attr__( 'Read more', 'flipnewmedia' ); ?>">
+			<?php if ( $image_markup ) : ?>
+				<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<?php endif; ?>
+		</a>
+
+		<div class="home-news-card-copy blog-archive-card__copy">
+			<h2 class="home-news-card-title blog-archive-card__title">
+				<a href="<?php echo esc_url( $permalink ); ?>"><?php echo esc_html( $title ); ?></a>
+			</h2>
+			<?php if ( $excerpt ) : ?>
+				<p class="home-news-card-excerpt blog-archive-card__excerpt"><?php echo esc_html( $excerpt ); ?></p>
+			<?php endif; ?>
+			<div class="home-news-card-footer blog-archive-card__footer">
+				<a class="home-news-card-arrow" href="<?php echo esc_url( $permalink ); ?>" aria-label="<?php echo esc_attr__( 'Read more', 'flipnewmedia' ); ?>"></a>
+			</div>
+		</div>
+	</article>
+	<?php
+
+	return (string) ob_get_clean();
+}
+
+function lsc_get_blog_archive_posts_markup( $term_id = 0, $limit = 11, $offset = 0 ) {
+	$query = new WP_Query( lsc_get_blog_archive_query_args( $term_id, $limit, $offset ) );
+
+	if ( ! $query->have_posts() ) {
+		return array(
+			'html'       => '',
+			'count'      => 0,
+			'has_more'   => false,
+			'total'      => 0,
+			'next_offset'=> max( 0, (int) $offset ),
+		);
+	}
+
+	$html = '';
+	foreach ( $query->posts as $index => $post ) {
+		$is_featured = 0 === (int) $offset && 0 === $index;
+		$html       .= lsc_render_blog_archive_card( $post->ID, $is_featured );
+	}
+
+	$count       = count( $query->posts );
+	$total       = (int) $query->found_posts;
+	$next_offset = (int) $offset + $count;
+	wp_reset_postdata();
+
+	return array(
+		'html'        => $html,
+		'count'       => $count,
+		'has_more'    => $next_offset < $total,
+		'total'       => $total,
+		'next_offset' => $next_offset,
+	);
+}
+
+function lsc_ajax_load_blog_archive_posts() {
+	$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'lsc_blog_archive_nonce' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'Invalid request.', 'flipnewmedia' ),
+			),
+			403
+		);
+	}
+
+	$term_id = isset( $_POST['term_id'] ) ? absint( wp_unslash( $_POST['term_id'] ) ) : 0;
+	$offset  = isset( $_POST['offset'] ) ? absint( wp_unslash( $_POST['offset'] ) ) : 0;
+	$limit   = isset( $_POST['limit'] ) ? absint( wp_unslash( $_POST['limit'] ) ) : 8;
+
+	$result = lsc_get_blog_archive_posts_markup( $term_id, $limit, $offset );
+
+	wp_send_json_success(
+		array(
+			'html'        => $result['html'],
+			'has_more'    => $result['has_more'],
+			'next_offset' => $result['next_offset'],
+			'count'       => $result['count'],
+		)
+	);
+}
+add_action( 'wp_ajax_lsc_load_blog_archive_posts', 'lsc_ajax_load_blog_archive_posts' );
+add_action( 'wp_ajax_nopriv_lsc_load_blog_archive_posts', 'lsc_ajax_load_blog_archive_posts' );
+
+function lsc_render_video_hero( $args = array() ) {
+	$upload_dir        = wp_get_upload_dir();
+	$default_video_url = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/3940140663-preview.mp4';
+
+	$args = wp_parse_args(
+		$args,
+		array(
+			'title'         => '',
+			'copy'          => '',
+			'aria_label'    => __( 'Page introduction', 'flipnewmedia' ),
+			'section_class' => '',
+			'inner_class'   => '',
+		)
+	);
+
+	$section_class = trim( 'contact-hero lsc-video-hero ' . $args['section_class'] );
+	$inner_class   = trim( 'contact-hero__inner ' . $args['inner_class'] );
+	$title         = (string) $args['title'];
+	$copy          = wp_strip_all_tags( (string) $args['copy'] );
+
+	ob_start();
+	?>
+	<section class="<?php echo esc_attr( $section_class ); ?>" aria-label="<?php echo esc_attr( $args['aria_label'] ); ?>">
+		<div class="contact-hero__media lsc-video-hero__media">
+			<video class="lsc-video-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+				<source src="<?php echo esc_url( $default_video_url ); ?>" type="video/mp4">
+			</video>
+			<div class="contact-hero__overlay" aria-hidden="true"></div>
+			<div class="container-ext <?php echo esc_attr( $inner_class ); ?>">
+				<div class="contact-hero__header">
+					<h1 class="contact-hero__title"><?php echo esc_html( $title ); ?></h1>
+				</div>
+				<div class="contact-hero__line" aria-hidden="true"></div>
+				<?php if ( '' !== $copy ) : ?>
+					<div class="contact-hero__copy-wrap">
+						<p class="contact-hero__copy"><?php echo esc_html( $copy ); ?></p>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+	</section>
+	<?php
+
+	return (string) ob_get_clean();
+}

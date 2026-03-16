@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Theme footer
  *
@@ -28,35 +28,47 @@ if ( 'ok' === $lsc_footer_status && 'newsletter' === $lsc_footer_form ) {
 ?>
     <footer class="lsc-footer" id="contact-footer">
       <section class="lsc-footer__newsletter" aria-label="<?php esc_attr_e( 'Newsletter', 'flipnewmedia-child' ); ?>">
-        <div class="container lsc-footer__newsletter-inner">
+        <div class="container-ext lsc-footer__newsletter-inner">
           <?php if ( ! empty( $lsc_notice_text ) ) : ?>
             <p class="lsc-footer__notice <?php echo esc_attr( $lsc_notice_class ); ?>"><?php echo esc_html( $lsc_notice_text ); ?></p>
           <?php endif; ?>
-          <div class="lsc-footer__newsletter-icon" aria-hidden="true">
-            <img src="<?php echo esc_url( $lsc_asset_newsletter ); ?>" alt="">
+          <div class="lsc-footer__newsletter-copy">
+            <h2 class="lsc-footer__newsletter-title">
+              <?php esc_html_e( 'Κάντε εγγραφή', 'flipnewmedia-child' ); ?><br>
+              <?php esc_html_e( 'στο newsletter μας', 'flipnewmedia-child' ); ?>
+            </h2>
+            <div class="lsc-footer__newsletter-icon" aria-hidden="true">
+              <img src="<?php echo esc_url( $lsc_asset_newsletter ); ?>" alt="">
+            </div>
           </div>
-          <form class="lsc-footer__newsletter-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+          <form class="lsc-footer__newsletter-form js-lsc-consent-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
             <input type="hidden" name="action" value="lsc_footer_newsletter_submit">
             <?php wp_nonce_field( 'lsc_footer_newsletter_submit', 'lsc_footer_newsletter_nonce' ); ?>
-            <label class="screen-reader-text" for="lsc-newsletter-email"><?php esc_html_e( 'Your Email', 'flipnewmedia-child' ); ?></label>
-            <input id="lsc-newsletter-email" type="email" name="newsletter_email" placeholder="Your Email*" required>
-            <button class="lsc-footer__newsletter-submit" type="submit"><?php esc_html_e( 'Αποστολή', 'flipnewmedia-child' ); ?></button>
-            <button class="lsc-footer__newsletter-arrow" type="submit" aria-label="<?php esc_attr_e( 'Submit', 'flipnewmedia-child' ); ?>">
-              <span aria-hidden="true">&rarr;</span>
-            </button>
+            <div class="lsc-footer__newsletter-row">
+              <label class="lsc-footer__newsletter-field" for="lsc-newsletter-email">
+                <span><?php esc_html_e( 'Your Email*', 'flipnewmedia-child' ); ?></span>
+                <input id="lsc-newsletter-email" type="email" name="newsletter_email" placeholder="" required>
+              </label>
+              <div class="lsc-footer__newsletter-actions">
+                <button class="lsc-footer__newsletter-submit" type="submit" disabled><?php esc_html_e( 'Αποστολή', 'flipnewmedia-child' ); ?></button>
+                <button class="lsc-footer__newsletter-arrow" type="submit" aria-label="<?php esc_attr_e( 'Submit', 'flipnewmedia-child' ); ?>" disabled>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
+            </div>
+            <label class="lsc-footer__consent lsc-footer__consent--light">
+              <input class="lsc-footer__switch-input js-lsc-consent-toggle" type="checkbox" name="newsletter_terms" value="1" required>
+              <span class="lsc-footer__switch" aria-hidden="true"><span></span></span>
+              <p>
+                <?php esc_html_e( 'Με τη συμπλήρωση και αποστολή των στοιχείων σας, αποδέχεστε τους Όρους Χρήσης.', 'flipnewmedia-child' ); ?>
+              </p>
+            </label>
           </form>
-          <label class="lsc-footer__consent lsc-footer__consent--light">
-            <input class="lsc-footer__switch-input" type="checkbox" name="newsletter_terms" value="1" required>
-            <span class="lsc-footer__switch" aria-hidden="true"><span></span></span>
-            <p>
-              <?php esc_html_e( 'Με τη συμπλήρωση και αποστολή των στοιχείων σας, αποδέχεστε τους Όρους Χρήσης.', 'flipnewmedia-child' ); ?>
-            </p>
-          </label>
         </div>
       </section>
 
       <section class="lsc-footer__main">
-        <div class="container lsc-footer__main-inner">
+        <div class="container-ext lsc-footer__main-inner">
           <div class="lsc-footer__top">
             <div class="lsc-footer__intro">
               <h2>
@@ -75,36 +87,24 @@ if ( 'ok' === $lsc_footer_status && 'newsletter' === $lsc_footer_form ) {
             </div>
 
             <div class="lsc-footer__form-wrap">
-              <form class="lsc-footer__contact-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+              <form class="lsc-footer__contact-form js-lsc-consent-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
                 <input type="hidden" name="action" value="lsc_footer_contact_submit">
                 <?php wp_nonce_field( 'lsc_footer_contact_submit', 'lsc_footer_contact_nonce' ); ?>
-                <label>
-                  <span><?php esc_html_e( 'Ονοματεπώνυμο:', 'flipnewmedia-child' ); ?></span>
-                  <input type="text" name="full_name" required>
-                </label>
-                <label>
-                  <span><?php esc_html_e( 'Τηλέφωνο:', 'flipnewmedia-child' ); ?></span>
-                  <input type="tel" name="phone">
-                </label>
-                <label>
-                  <span><?php esc_html_e( 'Email:', 'flipnewmedia-child' ); ?></span>
-                  <input type="email" name="email" required>
-                </label>
-                <label>
-                  <span><?php esc_html_e( 'Μήνυμα:', 'flipnewmedia-child' ); ?></span>
-                  <textarea name="message" rows="2"></textarea>
-                </label>
+                <input type="text" name="full_name" placeholder="<?php esc_attr_e( 'Ονοματεπώνυμο:', 'flipnewmedia-child' ); ?>" aria-label="<?php esc_attr_e( 'Ονοματεπώνυμο', 'flipnewmedia-child' ); ?>" required>
+                <input type="tel" name="phone" placeholder="<?php esc_attr_e( 'Τηλέφωνο:', 'flipnewmedia-child' ); ?>" aria-label="<?php esc_attr_e( 'Τηλέφωνο', 'flipnewmedia-child' ); ?>">
+                <input type="email" name="email" placeholder="<?php esc_attr_e( 'Email:', 'flipnewmedia-child' ); ?>" aria-label="<?php esc_attr_e( 'Email', 'flipnewmedia-child' ); ?>" required>
+                <textarea name="message" rows="2" placeholder="<?php esc_attr_e( 'Μήνυμα:', 'flipnewmedia-child' ); ?>" aria-label="<?php esc_attr_e( 'Μήνυμα', 'flipnewmedia-child' ); ?>"></textarea>
                 <div class="lsc-footer__form-actions">
                   <label class="lsc-footer__consent lsc-footer__consent--dark">
-                    <input class="lsc-footer__switch-input" type="checkbox" name="contact_terms" value="1" required>
+                    <input class="lsc-footer__switch-input js-lsc-consent-toggle" type="checkbox" name="contact_terms" value="1" required>
                     <span class="lsc-footer__switch" aria-hidden="true"><span></span></span>
                     <p>
                       <?php esc_html_e( 'Με τη συμπλήρωση και αποστολή των στοιχείων σας, αποδέχεστε τους Όρους Χρήσης.', 'flipnewmedia-child' ); ?>
                     </p>
                   </label>
                   <div class="lsc-footer__send">
-                    <button class="lsc-footer__send-btn" type="submit"><?php esc_html_e( 'Αποστολή', 'flipnewmedia-child' ); ?></button>
-                    <button class="lsc-footer__send-arrow" type="submit" aria-label="<?php esc_attr_e( 'Submit', 'flipnewmedia-child' ); ?>">
+                    <button class="lsc-footer__send-btn" type="submit" disabled><?php esc_html_e( 'Αποστολή', 'flipnewmedia-child' ); ?></button>
+                    <button class="lsc-footer__send-arrow" type="submit" aria-label="<?php esc_attr_e( 'Submit', 'flipnewmedia-child' ); ?>" disabled>
                       <span aria-hidden="true">&rarr;</span>
                     </button>
                   </div>
@@ -132,13 +132,35 @@ if ( 'ok' === $lsc_footer_status && 'newsletter' === $lsc_footer_form ) {
           </div>
         </div>
         <div class="lsc-footer__bottom">
-          <div class="container lsc-footer__bottom-inner">
+          <div class="container-ext lsc-footer__bottom-inner">
             <p>&copy; <?php echo esc_html( date_i18n( 'Y' ) ); ?>, Life Science Chemilab - All rights reserved</p>
             <p><?php esc_html_e( 'Made by Flipnewmedia', 'flipnewmedia-child' ); ?></p>
           </div>
         </div>
       </section>
     </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.js-lsc-consent-form').forEach(function (form) {
+          var toggle = form.querySelector('.js-lsc-consent-toggle');
+          var submits = form.querySelectorAll('button[type="submit"]');
+
+          if (!toggle || !submits.length) {
+            return;
+          }
+
+          function syncDisabledState() {
+            submits.forEach(function (button) {
+              button.disabled = !toggle.checked;
+            });
+          }
+
+          toggle.addEventListener('change', syncDisabledState);
+          syncDisabledState();
+        });
+      });
+    </script>
 
     </div><!-- #page -->
 

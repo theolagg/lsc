@@ -9,8 +9,8 @@
 get_header();
 
 $upload_dir         = wp_get_upload_dir();
-$contact_hero_image = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
-$contact_title      = 'Επικοινωνια';
+$contact_hero_video = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/3940140663-preview.mp4';
+$contact_title      = 'Επικοινωνία';
 $contact_copy       = 'Η ομάδα της LSC είναι πάντα δίπλα σας για να προσφέρει καθοδήγηση, υποστήριξη και λύσεις που ανταποκρίνονται στις ανάγκες σας.';
 $contact_locations  = array(
 	array(
@@ -37,7 +37,10 @@ reset( $contact_locations );
 
 <main id="primary" class="site-main contact-template">
   <section class="contact-hero figma-node-709-42" data-node-id="709:42" aria-label="<?php esc_attr_e( 'Contact introduction', 'flipnewmedia' ); ?>">
-    <div class="contact-hero__media" style="background-image:url('<?php echo esc_url( $contact_hero_image ); ?>');">
+    <div class="contact-hero__media lsc-video-hero__media">
+      <video class="lsc-video-hero__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="<?php echo esc_url( $contact_hero_video ); ?>" type="video/mp4">
+      </video>
       <div class="contact-hero__overlay" aria-hidden="true"></div>
       <div class="container-ext contact-hero__inner">
         <div class="contact-hero__header">
@@ -53,7 +56,8 @@ reset( $contact_locations );
 
   <section class="contact-locations figma-node-709-43" data-node-id="709:43" aria-label="<?php esc_attr_e( 'Company locations', 'flipnewmedia' ); ?>">
     <div class="contact-locations__panel">
-      <div class="container-ext contact-locations__overlay">
+      <div class="container-ext position-relative">
+      <div class=" contact-locations__overlay">
         <div class="contact-locations__tabs" role="tablist" aria-label="<?php esc_attr_e( 'Office locations', 'flipnewmedia' ); ?>">
           <?php foreach ( $contact_locations as $location ) : ?>
             <button
@@ -88,7 +92,7 @@ reset( $contact_locations );
           </div>
         </div>
       </div>
-
+ </div>
       <div class="contact-locations__map-shell">
         <iframe
           class="contact-locations__map"
@@ -98,6 +102,11 @@ reset( $contact_locations );
           referrerpolicy="no-referrer-when-downgrade"
           data-location-map
         ></iframe>
+        <div class="contact-locations__marker" aria-hidden="true">
+          <svg width="46" height="56" viewBox="0 0 46 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.69465 6.69477C15.621 -2.23159 30.0935 -2.23159 39.0198 6.69477C47.9461 15.6211 47.9462 30.0936 39.0198 39.02L22.8577 55.1821L6.69465 39.02C-2.23163 30.0937 -2.23147 15.6212 6.69465 6.69477ZM22.8001 10.3403C15.9374 10.3404 10.3745 15.9033 10.3743 22.7661C10.3743 29.6289 15.9373 35.1927 22.8001 35.1928C29.663 35.1928 35.2269 29.629 35.2269 22.7661C35.2267 15.9033 29.663 10.3403 22.8001 10.3403Z" fill="#2A417C"/>
+          </svg>
+        </div>
         <div class="contact-locations__fade" aria-hidden="true"></div>
         <div class="contact-locations__zoom" aria-label="<?php esc_attr_e( 'Map zoom controls', 'flipnewmedia' ); ?>">
           <button type="button" class="contact-locations__zoom-button" data-zoom-action="in" aria-label="<?php esc_attr_e( 'Zoom in', 'flipnewmedia' ); ?>">+</button>
@@ -125,6 +134,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   var locations = <?php echo wp_json_encode( $contact_locations ); ?>;
+  var overlay = section.querySelector('.contact-locations__overlay');
+  var tabsWrap = section.querySelector('.contact-locations__tabs');
   var tabs = section.querySelectorAll('[data-location-trigger]');
   var city = section.querySelector('[data-location-city]');
   var address = section.querySelector('[data-location-address]');
@@ -135,6 +146,15 @@ document.addEventListener('DOMContentLoaded', function () {
   var card = section.querySelector('[data-location-card]');
   var zoomButtons = section.querySelectorAll('[data-zoom-action]');
   var zoomLevel = 14;
+
+  function positionCard(activeTab) {
+    if (!card || !activeTab || !overlay || !tabsWrap) {
+      return;
+    }
+
+    card.style.left = activeTab.offsetLeft + 'px';
+    card.style.width = activeTab.offsetWidth + 'px';
+  }
 
   function getLocation(slug) {
     return locations.find(function (item) {
@@ -177,6 +197,10 @@ document.addEventListener('DOMContentLoaded', function () {
       var isActive = tab.getAttribute('data-location') === activeLocation.slug;
       tab.classList.toggle('is-active', isActive);
       tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+
+      if (isActive) {
+        positionCard(tab);
+      }
     });
   }
 
@@ -202,6 +226,14 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   renderLocation(card.getAttribute('data-current-location'));
+
+  window.addEventListener('resize', function () {
+    var activeTab = section.querySelector('[data-location-trigger].is-active');
+
+    if (activeTab) {
+      positionCard(activeTab);
+    }
+  });
 });
 </script>
 

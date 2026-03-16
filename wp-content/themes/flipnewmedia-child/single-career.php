@@ -7,26 +7,17 @@
 
 get_header();
 
-$upload_dir             = wp_get_upload_dir();
-$career_hero_image      = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/1080365813-preview-1.png';
-$career_return_url      = get_post_type_archive_link( 'career' ) ? get_post_type_archive_link( 'career' ) : home_url( '/career/' );
-$career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( wp_unslash( $_GET['career_form_status'] ) ) : '';
+$career_return_url     = get_post_type_archive_link( 'career' ) ? get_post_type_archive_link( 'career' ) : home_url( '/career/' );
+$career_form_status    = isset( $_GET['career_form_status'] ) ? sanitize_key( wp_unslash( $_GET['career_form_status'] ) ) : '';
+$career_share_icon_url = 'http://localhost:8080/wp-content/uploads/2026/03/image-10.svg';
 ?>
 
 <main id="primary" class="site-main single-career">
-	<div class="container-ext single-career__breadcrumbs">
-		<?php
-		if ( function_exists( 'yoast_breadcrumb' ) ) {
-			yoast_breadcrumb( '<p id="breadcrumbs">', '</p>' );
-		}
-		?>
-	</div>
-
 	<?php while ( have_posts() ) : the_post(); ?>
 		<?php
-		$career_permalink    = get_permalink();
-		$career_title        = get_the_title();
-		$career_share_links  = array(
+		$career_permalink   = get_permalink();
+		$career_title       = get_the_title();
+		$career_share_links = array(
 			array(
 				'label' => 'Facebook',
 				'url'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $career_permalink ),
@@ -41,13 +32,17 @@ $career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( w
 			),
 		);
 		?>
-		<section class="single-career__hero figma-node-710-211" data-node-id="710:211" aria-label="<?php esc_attr_e( 'Career hero', 'flipnewmedia' ); ?>">
-			<div class="single-career__visual" style="background-image:url('<?php echo esc_url( $career_hero_image ); ?>');" aria-hidden="true"></div>
-			<div class="single-career__fade" aria-hidden="true"></div>
-			<div class="container-ext single-career__hero-inner">
-				<h1 class="single-career__title" data-node-id="642:5638"><?php the_title(); ?></h1>
-			</div>
-		</section>
+		<?php
+		echo lsc_render_video_hero(
+			array(
+				'title'         => get_the_title(),
+				'copy'          => '',
+				'aria_label'    => __( 'Career hero', 'flipnewmedia' ),
+				'section_class' => 'single-career__hero figma-node-710-211',
+				'inner_class'   => 'single-career__hero-inner',
+			)
+		);
+		?>
 
 		<section class="single-career__details figma-node-710-212" data-node-id="710:212">
 			<div class="container-ext">
@@ -78,7 +73,7 @@ $career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( w
 
 					<div class="single-career__share">
 						<button type="button" class="single-career__share-trigger" aria-expanded="false">
-							<span class="single-career__share-icon" aria-hidden="true">⤴</span>
+							<span class="single-career__share-icon" aria-hidden="true"><img src="<?php echo esc_url( $career_share_icon_url ); ?>" alt="" loading="lazy" decoding="async"></span>
 							<span class="single-career__share-label"><?php esc_html_e( 'Μοιραστείτε το', 'flipnewmedia' ); ?></span>
 						</button>
 						<div class="single-career__share-menu">
@@ -105,23 +100,19 @@ $career_form_status     = isset( $_GET['career_form_status'] ) ? sanitize_key( w
 							<?php wp_nonce_field( 'lsc_career_application_submit', 'lsc_career_application_nonce' ); ?>
 
 							<label class="single-career__field">
-								<span class="single-career__field-label"><?php esc_html_e( 'Ονοματεπώνυμο:', 'flipnewmedia' ); ?></span>
-								<input type="text" name="career_full_name" required>
+								<input type="text" name="career_full_name" placeholder="<?php esc_attr_e( 'Ονοματεπώνυμο:', 'flipnewmedia' ); ?>" aria-label="<?php esc_attr_e( 'Ονοματεπώνυμο', 'flipnewmedia' ); ?>" required>
 							</label>
 
 							<label class="single-career__field">
-								<span class="single-career__field-label"><?php esc_html_e( 'Τηλέφωνο:', 'flipnewmedia' ); ?></span>
-								<input type="tel" name="career_phone">
+								<input type="tel" name="career_phone" placeholder="<?php esc_attr_e( 'Τηλέφωνο:', 'flipnewmedia' ); ?>" aria-label="<?php esc_attr_e( 'Τηλέφωνο', 'flipnewmedia' ); ?>">
 							</label>
 
 							<label class="single-career__field">
-								<span class="single-career__field-label"><?php esc_html_e( 'Email:', 'flipnewmedia' ); ?></span>
-								<input type="email" name="career_email" required>
+								<input type="email" name="career_email" placeholder="<?php esc_attr_e( 'Email:', 'flipnewmedia' ); ?>" aria-label="<?php esc_attr_e( 'Email', 'flipnewmedia' ); ?>" required>
 							</label>
 
 							<label class="single-career__field single-career__field--textarea">
-								<span class="single-career__field-label"><?php esc_html_e( 'Μήνυμα:', 'flipnewmedia' ); ?></span>
-								<textarea name="career_message" rows="4"></textarea>
+								<textarea name="career_message" rows="4" placeholder="<?php esc_attr_e( 'Μήνυμα:', 'flipnewmedia' ); ?>" aria-label="<?php esc_attr_e( 'Μήνυμα', 'flipnewmedia' ); ?>"></textarea>
 							</label>
 
 							<div class="single-career__upload-row">
