@@ -92,7 +92,12 @@ if ( $brand_slider_query->have_posts() ) {
 				<?php if ( $brand_intro_button_url ) : ?>
 					<a class="bu-brand-intro__button" href="<?php echo esc_url( $brand_intro_button_url ); ?>" data-node-id="642:4401">
 						<span class="bu-brand-intro__button-text"><?php echo esc_html( $brand_intro_button_text ); ?></span>
-						<span class="bu-brand-intro__button-icon" aria-hidden="true"></span>
+						<span class="bu-brand-intro__button-icon" aria-hidden="true">
+							<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M4 11H18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+								<path d="M12 5L18 11L12 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+							</svg>
+						</span>
 					</a>
 				<?php endif; ?>
 			</div>

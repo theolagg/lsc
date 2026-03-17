@@ -471,6 +471,7 @@ if ( ! $news_archive_url ) {
 							<span class="home-solutions-card-title"><?php echo nl2br( esc_html( $card['title'] ) ); ?></span>
 							<span class="home-solutions-card-arrow" aria-hidden="true"></span>
 						</button>
+						<span class="home-solutions-card-cursor" aria-hidden="true"></span>
 						<div
 							class="home-solutions-card-panel"
 							id="<?php echo esc_attr( $panel_id ); ?>"
@@ -480,7 +481,6 @@ if ( ! $news_archive_url ) {
 								<p class="home-solutions-card-description" data-node-id="<?php echo esc_attr( $card['desc_node'] ); ?>"><?php echo esc_html( $card['description'] ); ?></p>
 							<?php endif; ?>
 							<div class="home-solutions-card-footer">
-								<span class="home-solutions-card-cursor" aria-hidden="true"></span>
 								<a class="home-solutions-card-cta" href="<?php echo esc_url( $card['more_url'] ); ?>">
 									<span class="home-solutions-card-cta-text"><?php echo esc_html( $card['more_label'] ); ?></span>
 									<span class="home-solutions-card-cta-arrow" aria-hidden="true"></span>
@@ -750,13 +750,14 @@ if ( ! $news_archive_url ) {
 				});
 
 				card.addEventListener('mouseenter', function () {
-					if (cursor && card.classList.contains('is-active')) {
+					if (cursor) {
+						card.classList.add('is-cursor-active');
 						cursor.classList.add('is-visible');
 					}
 				});
 
 				card.addEventListener('mousemove', function (event) {
-					if (!cursor || !card.classList.contains('is-active')) return;
+					if (!cursor) return;
 
 					var rect = card.getBoundingClientRect();
 					var x = event.clientX - rect.left;
@@ -767,6 +768,7 @@ if ( ! $news_archive_url ) {
 				});
 
 				card.addEventListener('mouseleave', function () {
+					card.classList.remove('is-cursor-active');
 					if (cursor) {
 						cursor.classList.remove('is-visible');
 					}

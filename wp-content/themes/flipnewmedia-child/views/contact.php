@@ -10,6 +10,7 @@ get_header();
 
 $upload_dir         = wp_get_upload_dir();
 $contact_hero_video = trailingslashit( $upload_dir['baseurl'] ) . '2026/03/3940140663-preview.mp4';
+$google_maps_api_key = function_exists( 'lsc_get_google_maps_api_key' ) ? lsc_get_google_maps_api_key() : '';
 $contact_title      = 'Επικοινωνία';
 $contact_copy       = 'Η ομάδα της LSC είναι πάντα δίπλα σας για να προσφέρει καθοδήγηση, υποστήριξη και λύσεις που ανταποκρίνονται στις ανάγκες σας.';
 $contact_locations  = array(
@@ -94,6 +95,14 @@ reset( $contact_locations );
       </div>
  </div>
       <div class="contact-locations__map-shell">
+        <?php if ( $google_maps_api_key ) : ?>
+        <div
+          class="contact-locations__map"
+          title="<?php esc_attr_e( 'Company map', 'flipnewmedia' ); ?>"
+          data-location-map
+          data-map-mode="google-js"
+        ></div>
+        <?php else : ?>
         <iframe
           class="contact-locations__map"
           title="<?php esc_attr_e( 'Company map', 'flipnewmedia' ); ?>"
@@ -101,7 +110,9 @@ reset( $contact_locations );
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
           data-location-map
+          data-map-mode="iframe"
         ></iframe>
+        <?php endif; ?>
         <div class="contact-locations__marker" aria-hidden="true">
           <svg width="46" height="56" viewBox="0 0 46 56" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M6.69465 6.69477C15.621 -2.23159 30.0935 -2.23159 39.0198 6.69477C47.9461 15.6211 47.9462 30.0936 39.0198 39.02L22.8577 55.1821L6.69465 39.02C-2.23163 30.0937 -2.23147 15.6212 6.69465 6.69477ZM22.8001 10.3403C15.9374 10.3404 10.3745 15.9033 10.3743 22.7661C10.3743 29.6289 15.9373 35.1927 22.8001 35.1928C29.663 35.1928 35.2269 29.629 35.2269 22.7661C35.2267 15.9033 29.663 10.3403 22.8001 10.3403Z" fill="#2A417C"/>
@@ -146,6 +157,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var card = section.querySelector('[data-location-card]');
   var zoomButtons = section.querySelectorAll('[data-zoom-action]');
   var zoomLevel = 14;
+  var isGoogleJsMap = map && map.getAttribute('data-map-mode') === 'google-js';
+  var googleMap = null;
+  var googleMarker = null;
+  var googleGeocoder = null;
 
   function positionCard(activeTab) {
     if (!card || !activeTab || !overlay || !tabsWrap) {
@@ -164,6 +179,66 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function buildMapUrl(addressValue) {
     return 'https://www.google.com/maps?q=' + encodeURIComponent(addressValue) + '&z=' + zoomLevel + '&output=embed';
+  }
+
+  function ensureGoogleMap() {
+    if (!isGoogleJsMap || !window.google || !window.google.maps || googleMap) {
+      return;
+    }
+
+    googleMap = new window.google.maps.Map(map, {
+      zoom: zoomLevel,
+      center: { lat: 37.9838, lng: 23.7275 },
+      disableDefaultUI: true,
+      zoomControl: false,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      styles: [
+        { elementType: 'geometry', stylers: [{ color: '#ececec' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#445a93' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
+        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#d9d9d9' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dce4f2' }] }
+      ]
+    });
+
+    googleGeocoder = new window.google.maps.Geocoder();
+    googleMarker = new window.google.maps.Marker({
+      map: googleMap,
+      icon: {
+        path: 'M6.69465 6.69477C15.621 -2.23159 30.0935 -2.23159 39.0198 6.69477C47.9461 15.6211 47.9462 30.0936 39.0198 39.02L22.8577 55.1821L6.69465 39.02C-2.23163 30.0937 -2.23147 15.6212 6.69465 6.69477ZM22.8001 10.3403C15.9374 10.3404 10.3745 15.9033 10.3743 22.7661C10.3743 29.6289 15.9373 35.1927 22.8001 35.1928C29.663 35.1928 35.2269 29.629 35.2269 22.7661C35.2267 15.9033 29.663 10.3403 22.8001 10.3403Z',
+        fillColor: '#2A417C',
+        fillOpacity: 1,
+        strokeWeight: 0,
+        scale: 1,
+        anchor: new window.google.maps.Point(23, 56)
+      }
+    });
+  }
+
+  function renderGoogleLocation(activeLocation) {
+    ensureGoogleMap();
+
+    if (!googleMap || !googleGeocoder || !activeLocation) {
+      return;
+    }
+
+    googleMap.setZoom(zoomLevel);
+    googleGeocoder.geocode({ address: activeLocation.address }, function (results, status) {
+      if (status !== 'OK' || !results || !results.length) {
+        return;
+      }
+
+      var location = results[0].geometry.location;
+      googleMap.setCenter(location);
+
+      if (googleMarker) {
+        googleMarker.setPosition(location);
+      }
+    });
   }
 
   function renderLocation(slug) {
@@ -191,7 +266,11 @@ document.addEventListener('DOMContentLoaded', function () {
       emailLink.href = 'mailto:' + activeLocation.email;
     }
 
-    map.src = buildMapUrl(activeLocation.address);
+    if (isGoogleJsMap) {
+      renderGoogleLocation(activeLocation);
+    } else {
+      map.src = buildMapUrl(activeLocation.address);
+    }
 
     tabs.forEach(function (tab) {
       var isActive = tab.getAttribute('data-location') === activeLocation.slug;
@@ -221,7 +300,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       zoomLevel = direction === 'in' ? Math.min(18, zoomLevel + 1) : Math.max(10, zoomLevel - 1);
-      map.src = buildMapUrl(activeLocation.address);
+
+      if (isGoogleJsMap) {
+        renderGoogleLocation(activeLocation);
+      } else {
+        map.src = buildMapUrl(activeLocation.address);
+      }
     });
   });
 
@@ -236,6 +320,10 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 </script>
+
+<?php if ( $google_maps_api_key ) : ?>
+<script async defer src="<?php echo esc_url( 'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode( $google_maps_api_key ) ); ?>"></script>
+<?php endif; ?>
 
 <?php
 get_footer();

@@ -235,6 +235,31 @@ jQuery(function ($) {
       }
     ]
   });
+
+  $slider.off('.featuredCursor');
+  $slider.on('mouseenter.featuredCursor', '.bu-category-featured__card', function () {
+    this.classList.add('is-cursor-active');
+  });
+
+  $slider.on('mousemove.featuredCursor', '.bu-category-featured__card', function (event) {
+    var bubble = this.querySelector('.bu-category-featured__bubble');
+    if (!bubble) return;
+
+    var rect = this.getBoundingClientRect();
+    var x = event.clientX - rect.left;
+    var y = event.clientY - rect.top;
+    var pad = 28;
+
+    x = Math.max(pad, Math.min(rect.width - pad, x));
+    y = Math.max(pad, Math.min(rect.height - pad, y));
+
+    bubble.style.left = x + 'px';
+    bubble.style.top = y + 'px';
+  });
+
+  $slider.on('mouseleave.featuredCursor', '.bu-category-featured__card', function () {
+    this.classList.remove('is-cursor-active');
+  });
 });
 </script>
 

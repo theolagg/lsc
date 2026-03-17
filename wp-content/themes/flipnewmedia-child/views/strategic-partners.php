@@ -145,7 +145,7 @@ $logos_more_url   = function_exists( 'get_field' ) ? ( get_field( 'sp_logos_more
   <?php if ( ! empty( $partners_slides ) ) : ?>
     <section class="home-partners figma-node-700-95" data-node-id="700:95" aria-label="<?php esc_attr_e( 'Strategic partners', 'flipnewmedia' ); ?>">
       <div class="container-ext">
-        <h2 class="home-partners-title" data-node-id="642:4138"><?php echo esc_html( $partners_section_title ); ?></h2>
+        
       </div>
       <div class="home-partners-slider js-home-partners-slider">
         <?php foreach ( $partners_slides as $slide ) : ?>
@@ -181,7 +181,7 @@ $logos_more_url   = function_exists( 'get_field' ) ? ( get_field( 'sp_logos_more
           <div class="strategic-partners-logos__cta">
             <a href="<?php echo esc_url( $logos_more_url ); ?>" class="strategic-partners-logos__more">
               <span class="strategic-partners-logos__more-label"><?php echo esc_html( $logos_more_label ); ?></span>
-              <span class="strategic-partners-logos__more-icon" aria-hidden="true">↓</span>
+              <span class="strategic-partners-logos__more-icon" aria-hidden="true"></span>
             </a>
           </div>
         <?php endif; ?>

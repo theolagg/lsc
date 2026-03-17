@@ -241,6 +241,26 @@
             "selected": 0
         },
         {
+            "key": "field_landing_center_copy",
+            "label": "Centered Copy",
+            "name": "landing_center_copy",
+            "aria-label": "",
+            "type": "textarea",
+            "instructions": "Centered text shown below the hero slider and above the feature sections.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "rows": 4,
+            "new_lines": "br",
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": ""
+        },
+        {
             "key": "field_landing_feature_sections",
             "label": "Sections",
             "name": "landing_feature_sections",

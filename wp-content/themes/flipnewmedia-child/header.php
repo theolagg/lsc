@@ -91,14 +91,20 @@
               'fallback_cb'    => false,
             ]);
           ?>
-          <a class="header-search-link" href="<?php echo esc_url( home_url( '/?s=' ) ); ?>" aria-label="<?php esc_attr_e( 'Search', 'flipnewmedia' ); ?>">
-            <img
-              src="<?php echo esc_url( trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/Vector.svg' ); ?>"
-              alt="<?php esc_attr_e( 'Search', 'flipnewmedia' ); ?>"
-              width="18"
-              height="18"
-            />
-          </a>
+          <div class="header-search" data-header-search>
+            <button class="header-search-link" type="button" aria-label="<?php esc_attr_e( 'Search', 'flipnewmedia' ); ?>" aria-expanded="false" aria-controls="desktop-header-search-form">
+              <img
+                src="<?php echo esc_url( trailingslashit( wp_get_upload_dir()['baseurl'] ) . '2026/03/Vector.svg' ); ?>"
+                alt="<?php esc_attr_e( 'Search', 'flipnewmedia' ); ?>"
+                width="18"
+                height="18"
+              />
+            </button>
+            <form id="desktop-header-search-form" class="header-search-form" action="<?php echo esc_url( home_url( '/' ) ); ?>" method="get" role="search">
+              <label class="sr-only" for="desktop-header-search-input"><?php esc_html_e( 'Search', 'flipnewmedia' ); ?></label>
+              <input id="desktop-header-search-input" class="header-search-input" type="search" name="s" placeholder="<?php esc_attr_e( 'Αναζήτηση', 'flipnewmedia' ); ?>" autocomplete="off" />
+            </form>
+          </div>
         </div>
 
         <div class="nav-mobile">
@@ -231,6 +237,65 @@
   });
 
   syncNavState();
+})();
+</script>
+
+<script>
+(function(){
+  var searchWrap = document.querySelector('[data-header-search]');
+  var backdrop = document.querySelector('.nav-backdrop');
+  if (!searchWrap) return;
+
+  var button = searchWrap.querySelector('.header-search-link');
+  var input = searchWrap.querySelector('.header-search-input');
+  if (!button || !input) return;
+
+  function isDesktop(){
+    return window.matchMedia('(min-width: 992px)').matches;
+  }
+
+  function openSearch(){
+    if (!isDesktop()) return;
+    searchWrap.classList.add('is-open');
+    document.body.classList.add('search-open');
+    button.setAttribute('aria-expanded', 'true');
+    window.setTimeout(function(){
+      input.focus({ preventScroll: true });
+    }, 140);
+  }
+
+  function closeSearch(){
+    searchWrap.classList.remove('is-open');
+    document.body.classList.remove('search-open');
+    button.setAttribute('aria-expanded', 'false');
+  }
+
+  button.addEventListener('click', function(){
+    if (searchWrap.classList.contains('is-open')) closeSearch(); else openSearch();
+  });
+
+  document.addEventListener('click', function(e){
+    if (!isDesktop() || !searchWrap.classList.contains('is-open')) return;
+    if (searchWrap.contains(e.target)) return;
+    closeSearch();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && searchWrap.classList.contains('is-open')) {
+      closeSearch();
+      button.focus({ preventScroll: true });
+    }
+  });
+
+  if (backdrop) {
+    backdrop.addEventListener('click', function(){
+      if (document.body.classList.contains('search-open')) closeSearch();
+    });
+  }
+
+  window.addEventListener('resize', function(){
+    if (!isDesktop()) closeSearch();
+  });
 })();
 </script>
 
