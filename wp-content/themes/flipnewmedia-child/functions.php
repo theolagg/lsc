@@ -636,6 +636,10 @@ function lsc_render_blog_archive_card( $post_id, $is_featured = false ) {
 				<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php endif; ?>
 		</a>
+		<span class="blog-archive-card__cursor" aria-hidden="true">
+			<canvas class="blog-archive-card__cursor-canvas"></canvas>
+			<span class="blog-archive-card__cursor-text"><?php echo esc_html__( 'Περισσότερα', 'flipnewmedia' ); ?></span>
+		</span>
 
 		<div class="home-news-card-copy blog-archive-card__copy">
 			<h2 class="home-news-card-title blog-archive-card__title">
@@ -761,3 +765,440 @@ function lsc_render_video_hero( $args = array() ) {
 
 	return (string) ob_get_clean();
 }
+
+function lsc_get_google_maps_api_key() {
+	$key = '';
+
+	if ( defined( 'GOOGLE_MAPS_API_KEY' ) && GOOGLE_MAPS_API_KEY ) {
+		$key = (string) GOOGLE_MAPS_API_KEY;
+	}
+
+	if ( '' === $key ) {
+		$env_key = getenv( 'GOOGLE_MAPS_API_KEY' );
+		if ( false !== $env_key && '' !== $env_key ) {
+			$key = (string) $env_key;
+		}
+	}
+
+	return trim( $key );
+}
+
+function lsc_render_global_lens_cursor_script() {
+	if ( is_admin() ) {
+		return;
+	}
+	?>
+	<script>
+	(function () {
+		if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+		var imageCache = new Map();
+		var snapshotCache = new WeakMap();
+
+		function loadImage(src) {
+			if (!src) return Promise.resolve(null);
+			if (imageCache.has(src)) return imageCache.get(src);
+
+			var promise = new Promise(function (resolve) {
+				var img = new Image();
+				img.decoding = 'async';
+				img.onload = function () { resolve(img); };
+				img.onerror = function () { resolve(null); };
+				img.src = src;
+			});
+
+			imageCache.set(src, promise);
+			return promise;
+		}
+
+		function parseBackgroundUrl(value) {
+			if (!value || value === 'none') return '';
+			var match = value.match(/url\((['"]?)(.*?)\1\)/);
+			return match ? match[2] : '';
+		}
+
+		function ensureLensCanvas(cursor) {
+			var canvas = cursor.querySelector('.lsc-lens-canvas');
+			if (canvas) return canvas;
+
+			canvas = document.createElement('canvas');
+			canvas.className = 'lsc-lens-canvas';
+			cursor.insertBefore(canvas, cursor.firstChild);
+			return canvas;
+		}
+
+		function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+			if (!text) return;
+			var words = String(text).trim().split(/\s+/);
+			var line = '';
+			var lines = [];
+
+			words.forEach(function (word) {
+				var testLine = line ? line + ' ' + word : word;
+				if (ctx.measureText(testLine).width > maxWidth && line) {
+					lines.push(line);
+					line = word;
+				} else {
+					line = testLine;
+				}
+			});
+
+			if (line) lines.push(line);
+			if (typeof maxLines === 'number' && lines.length > maxLines) {
+				lines = lines.slice(0, maxLines);
+			}
+
+			lines.forEach(function (entry, index) {
+				ctx.fillText(entry, x, y + index * lineHeight);
+			});
+		}
+
+		function drawImageLike(ctx, image, drawBox, fit) {
+			if (!image || !drawBox.width || !drawBox.height) return;
+			var naturalW = image.naturalWidth || drawBox.width;
+			var naturalH = image.naturalHeight || drawBox.height;
+			var scale = (fit === 'contain')
+				? Math.min(drawBox.width / naturalW, drawBox.height / naturalH)
+				: Math.max(drawBox.width / naturalW, drawBox.height / naturalH);
+			var drawW = naturalW * scale;
+			var drawH = naturalH * scale;
+			var drawX = drawBox.x + (drawBox.width - drawW) / 2;
+			var drawY = drawBox.y + (drawBox.height - drawH) / 2;
+
+			ctx.save();
+			ctx.beginPath();
+			ctx.rect(drawBox.x, drawBox.y, drawBox.width, drawBox.height);
+			ctx.clip();
+			ctx.drawImage(image, drawX, drawY, drawW, drawH);
+			ctx.restore();
+		}
+
+		function createSnapshot(target, config) {
+			var rect = target.getBoundingClientRect();
+			var width = Math.max(1, Math.round(rect.width));
+			var height = Math.max(1, Math.round(rect.height));
+			var canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			var ctx = canvas.getContext('2d');
+			if (!ctx) return Promise.resolve(null);
+
+			var targetStyle = window.getComputedStyle(target);
+			var bgColor = targetStyle.backgroundColor && targetStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' ? targetStyle.backgroundColor : '#ffffff';
+			ctx.fillStyle = bgColor;
+			ctx.fillRect(0, 0, width, height);
+
+			var drawPromises = [];
+
+			(config.backgroundSelectors || []).forEach(function (selector) {
+				var el = target.querySelector(selector);
+				if (!el) return;
+				var style = window.getComputedStyle(el);
+				var src = parseBackgroundUrl(style.backgroundImage);
+				var box = el.getBoundingClientRect();
+				var drawBox = {
+					x: box.left - rect.left,
+					y: box.top - rect.top,
+					width: box.width,
+					height: box.height
+				};
+				drawPromises.push(
+					loadImage(src).then(function (img) {
+						drawImageLike(ctx, img, drawBox, 'cover');
+					})
+				);
+			});
+
+			(config.imageSelectors || []).forEach(function (selector) {
+				var el = target.querySelector(selector);
+				if (!el) return;
+				var box = el.getBoundingClientRect();
+				var drawBox = {
+					x: box.left - rect.left,
+					y: box.top - rect.top,
+					width: box.width,
+					height: box.height
+				};
+				var fit = window.getComputedStyle(el).objectFit || 'cover';
+				drawPromises.push(
+					loadImage(el.currentSrc || el.src).then(function (img) {
+						drawImageLike(ctx, img, drawBox, fit === 'contain' ? 'contain' : 'cover');
+					})
+				);
+			});
+
+			return Promise.all(drawPromises).then(function () {
+				(config.textSelectors || []).forEach(function (selector) {
+					var el = target.querySelector(selector);
+					if (!el) return;
+					var box = el.getBoundingClientRect();
+					var style = window.getComputedStyle(el);
+					var x = box.left - rect.left;
+					var y = box.top - rect.top;
+					var maxWidth = box.width;
+					var fontSize = parseFloat(style.fontSize || '18');
+					ctx.textBaseline = 'top';
+					ctx.fillStyle = style.color || '#2a417c';
+					ctx.font = (style.fontWeight || '400') + ' ' + fontSize + 'px ' + (style.fontFamily || 'sans-serif');
+					drawWrappedText(ctx, el.textContent || '', x, y, maxWidth, fontSize * 1.25, selector.indexOf('excerpt') !== -1 ? 4 : 3);
+				});
+
+				return { canvas: canvas, width: width, height: height };
+			});
+		}
+
+		function renderLens(state, event) {
+			if (!state.ctx || !state.snapshot || !state.snapshot.canvas) return;
+
+			var targetRect = state.target.getBoundingClientRect();
+			var lensW = state.cursor.offsetWidth || 147;
+			var lensH = state.cursor.offsetHeight || 151;
+			var workW = state.renderWidth || lensW;
+			var workH = state.renderHeight || lensH;
+			var safeX = Math.max(0, Math.min(targetRect.width, event.clientX - targetRect.left));
+			var safeY = Math.max(0, Math.min(targetRect.height, event.clientY - targetRect.top));
+			var ratioX = targetRect.width > 0 ? safeX / targetRect.width : 0.5;
+			var ratioY = targetRect.height > 0 ? safeY / targetRect.height : 0.5;
+			var naturalW = state.snapshot.width || targetRect.width || lensW;
+			var naturalH = state.snapshot.height || targetRect.height || lensH;
+			var sourceX = ratioX * naturalW;
+			var sourceY = ratioY * naturalH;
+			var centerX = workW / 2;
+			var centerY = workH / 2;
+			var radiusX = workW / 2;
+			var radiusY = workH / 2;
+			var captureW = Math.min(naturalW, lensW + 28);
+			var captureH = Math.min(naturalH, lensH + 28);
+			var captureX = Math.max(0, Math.min(naturalW - captureW, sourceX - captureW / 2));
+			var captureY = Math.max(0, Math.min(naturalH - captureH, sourceY - captureH / 2));
+
+			state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+			state.scratchCtx.clearRect(0, 0, workW, workH);
+			state.outputCtx.clearRect(0, 0, workW, workH);
+
+			state.scratchCtx.drawImage(state.snapshot.canvas, captureX, captureY, captureW, captureH, 0, 0, workW, workH);
+			var sourceFrame = state.scratchCtx.getImageData(0, 0, workW, workH);
+			var targetFrame = state.outputCtx.createImageData(workW, workH);
+			var src = sourceFrame.data;
+			var dst = targetFrame.data;
+
+			function sample(px, py, channel) {
+				var x = Math.max(0, Math.min(workW - 1, Math.round(px)));
+				var y = Math.max(0, Math.min(workH - 1, Math.round(py)));
+				return src[(y * workW + x) * 4 + channel];
+			}
+
+			for (var py = 0; py < workH; py += 1) {
+				for (var px = 0; px < workW; px += 1) {
+					var dx = (px - centerX) / radiusX;
+					var dy = (py - centerY) / radiusY;
+					var r = Math.sqrt(dx * dx + dy * dy);
+					var outIndex = (py * workW + px) * 4;
+					if (r > 1) {
+						dst[outIndex + 3] = 0;
+						continue;
+					}
+
+					var angle = Math.atan2(dy, dx);
+					var edge = Math.pow(r, 1.55);
+					var vortex = Math.pow(1 - r, 1.25) * 0.18;
+					var refraction = edge * 12.5;
+					var twisted = angle + vortex;
+					var sx = centerX + Math.cos(twisted) * (r * radiusX - refraction);
+					var sy = centerY + Math.sin(twisted) * (r * radiusY - refraction * 0.92);
+					var disperse = Math.max(0, r - 0.18) * 9.5;
+					var blurOffset = Math.max(0, r - 0.08) * 2.2;
+					var red = (sample(sx - disperse - blurOffset, sy - blurOffset * 0.35, 0) + sample(sx - disperse * 0.4, sy, 0)) / 2;
+					var green = (sample(sx, sy, 1) + sample(sx + blurOffset * 0.2, sy + blurOffset * 0.2, 1)) / 2;
+					var blue = (sample(sx + disperse + blurOffset, sy + blurOffset * 0.35, 2) + sample(sx + disperse * 0.4, sy, 2)) / 2;
+					var avg = (red + green + blue) / 3;
+					var sat = 1.28 + edge * 0.72;
+
+					red = avg + (red - avg) * sat;
+					green = avg + (green - avg) * sat;
+					blue = avg + (blue - avg) * sat;
+
+					dst[outIndex] = Math.max(0, Math.min(255, red));
+					dst[outIndex + 1] = Math.max(0, Math.min(255, green));
+					dst[outIndex + 2] = Math.max(0, Math.min(255, blue));
+					dst[outIndex + 3] = 255;
+				}
+			}
+
+			state.outputCtx.putImageData(targetFrame, 0, 0);
+
+			state.ctx.save();
+			state.ctx.beginPath();
+			state.ctx.ellipse(lensW / 2, lensH / 2, lensW / 2, lensH / 2, 0, 0, Math.PI * 2);
+			state.ctx.clip();
+			state.ctx.filter = 'blur(1.8px)';
+			state.ctx.drawImage(state.outputCanvas, 0, 0, workW, workH, 0, 0, lensW, lensH);
+			state.ctx.filter = 'none';
+
+			var ringGradient = state.ctx.createRadialGradient(lensW / 2, lensH / 2, lensW * 0.2, lensW / 2, lensH / 2, lensW * 0.74);
+			ringGradient.addColorStop(0, 'rgba(255,255,255,0)');
+			ringGradient.addColorStop(0.5, 'rgba(255,255,255,0)');
+			ringGradient.addColorStop(0.78, 'rgba(255,255,255,0.12)');
+			ringGradient.addColorStop(1, 'rgba(42,65,124,0.24)');
+			state.ctx.fillStyle = ringGradient;
+			state.ctx.fillRect(0, 0, lensW, lensH);
+			state.ctx.fillStyle = 'rgba(255,255,255,0.045)';
+			state.ctx.fillRect(0, 0, lensW, lensH);
+			state.ctx.restore();
+		}
+
+		function bindLens(config) {
+			document.querySelectorAll(config.target).forEach(function (target) {
+				if (target.dataset.lensBound === 'true') return;
+				target.dataset.lensBound = 'true';
+
+				var cursor = target.querySelector(config.cursor);
+				if (!cursor) return;
+
+				var canvas = ensureLensCanvas(cursor);
+				var ctx = canvas.getContext ? canvas.getContext('2d') : null;
+				var scratchCanvas = document.createElement('canvas');
+				var scratchCtx = scratchCanvas.getContext ? scratchCanvas.getContext('2d') : null;
+				var outputCanvas = document.createElement('canvas');
+				var outputCtx = outputCanvas.getContext ? outputCanvas.getContext('2d') : null;
+				var state = {
+					target: target,
+					cursor: cursor,
+					canvas: canvas,
+					ctx: ctx,
+					scratchCanvas: scratchCanvas,
+					scratchCtx: scratchCtx,
+					outputCanvas: outputCanvas,
+					outputCtx: outputCtx,
+					snapshot: null,
+					pendingEvent: null,
+					rafId: 0,
+					renderWidth: 0,
+					renderHeight: 0,
+					renderScale: 0.42
+				};
+				if (!ctx || !scratchCtx || !outputCtx) return;
+
+				function resizeCanvas() {
+					var dpr = Math.max(1, window.devicePixelRatio || 1);
+					var width = cursor.offsetWidth || 147;
+					var height = cursor.offsetHeight || 151;
+					canvas.width = Math.round(width * dpr);
+					canvas.height = Math.round(height * dpr);
+					ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+					state.renderWidth = Math.max(36, Math.round(width * state.renderScale));
+					state.renderHeight = Math.max(38, Math.round(height * state.renderScale));
+					scratchCanvas.width = state.renderWidth;
+					scratchCanvas.height = state.renderHeight;
+					outputCanvas.width = state.renderWidth;
+					outputCanvas.height = state.renderHeight;
+				}
+
+				function ensureSnapshot() {
+					var cached = snapshotCache.get(target);
+					if (cached) {
+						state.snapshot = cached;
+						return Promise.resolve(cached);
+					}
+					return createSnapshot(target, config).then(function (shot) {
+						if (shot) {
+							snapshotCache.set(target, shot);
+							state.snapshot = shot;
+						}
+						return shot;
+					});
+				}
+
+				function updatePosition(event) {
+					var rect = target.getBoundingClientRect();
+					var pad = 28;
+					var x = Math.max(pad, Math.min(rect.width - pad, event.clientX - rect.left));
+					var y = Math.max(pad, Math.min(rect.height - pad, event.clientY - rect.top));
+					cursor.style.left = x + 'px';
+					cursor.style.top = y + 'px';
+					state.pendingEvent = event;
+					if (!state.rafId) {
+						state.rafId = window.requestAnimationFrame(function () {
+							state.rafId = 0;
+							if (state.pendingEvent) renderLens(state, state.pendingEvent);
+						});
+					}
+				}
+
+				resizeCanvas();
+
+				target.addEventListener('mouseenter', function (event) {
+					target.classList.add('is-cursor-active');
+					resizeCanvas();
+					ensureSnapshot().then(function () {
+						updatePosition(event);
+					});
+				});
+				target.addEventListener('mousemove', updatePosition);
+				target.addEventListener('mouseleave', function () {
+					target.classList.remove('is-cursor-active');
+					state.pendingEvent = null;
+					if (state.rafId) {
+						window.cancelAnimationFrame(state.rafId);
+						state.rafId = 0;
+					}
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+				});
+				window.addEventListener('resize', function () {
+					snapshotCache.delete(target);
+					state.snapshot = null;
+					resizeCanvas();
+				});
+			});
+		}
+
+		[
+			{
+				target: '.blog-archive-card',
+				cursor: '.blog-archive-card__cursor',
+				imageSelectors: ['.blog-archive-card__media img'],
+				textSelectors: ['.blog-archive-card__title', '.blog-archive-card__excerpt']
+			},
+			{
+				target: '.bu-products-latest__media',
+				cursor: '.bu-products-latest__bubble',
+				imageSelectors: ['img'],
+				textSelectors: []
+			},
+			{
+				target: '.bu-brand-categories__card',
+				cursor: '.bu-brand-categories__bubble',
+				imageSelectors: ['.bu-brand-categories__media img'],
+				textSelectors: ['.bu-brand-categories__item-title']
+			},
+			{
+				target: '.bu-product-related__card',
+				cursor: '.bu-product-related__more',
+				imageSelectors: ['.bu-product-related__media img'],
+				textSelectors: ['.bu-product-related__item-title']
+			},
+			{
+				target: '.bu-category-featured__card',
+				cursor: '.bu-category-featured__bubble',
+				imageSelectors: ['.bu-category-featured__media img'],
+				textSelectors: ['.bu-category-featured__item-title']
+			},
+			{
+				target: '.home-partners-media',
+				cursor: '.home-partners-more',
+				backgroundSelectors: ['.home-partners-bg--left', '.home-partners-bg--right'],
+				imageSelectors: ['.home-partners-logo'],
+				textSelectors: []
+			},
+			{
+				target: '.home-solutions-card',
+				cursor: '.home-solutions-card-cursor',
+				imageSelectors: [],
+				textSelectors: ['.home-solutions-card-title', '.home-solutions-card-description']
+			}
+		].forEach(bindLens);
+	}());
+	</script>
+	<?php
+}
+add_action( 'wp_footer', 'lsc_render_global_lens_cursor_script', 100 );

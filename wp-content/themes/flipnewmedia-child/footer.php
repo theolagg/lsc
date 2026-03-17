@@ -45,10 +45,9 @@ if ( 'ok' === $lsc_footer_status && 'newsletter' === $lsc_footer_form ) {
             <input type="hidden" name="action" value="lsc_footer_newsletter_submit">
             <?php wp_nonce_field( 'lsc_footer_newsletter_submit', 'lsc_footer_newsletter_nonce' ); ?>
             <div class="lsc-footer__newsletter-row">
-              <label class="lsc-footer__newsletter-field" for="lsc-newsletter-email">
-                <span><?php esc_html_e( 'Your Email*', 'flipnewmedia-child' ); ?></span>
-                <input id="lsc-newsletter-email" type="email" name="newsletter_email" placeholder="" required>
-              </label>
+              <div class="lsc-footer__newsletter-field">
+                <input id="lsc-newsletter-email" type="email" name="newsletter_email" placeholder="<?php esc_attr_e( 'Your Email*', 'flipnewmedia-child' ); ?>" aria-label="<?php esc_attr_e( 'Your Email*', 'flipnewmedia-child' ); ?>" required>
+              </div>
               <div class="lsc-footer__newsletter-actions">
                 <button class="lsc-footer__newsletter-submit" type="submit" disabled><?php esc_html_e( 'Αποστολή', 'flipnewmedia-child' ); ?></button>
                 <button class="lsc-footer__newsletter-arrow" type="submit" aria-label="<?php esc_attr_e( 'Submit', 'flipnewmedia-child' ); ?>" disabled>

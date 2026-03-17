@@ -66,13 +66,14 @@ $default_landing_feature_sections = array(
 	),
 );
 
-$landing_hero_title        = function_exists( 'get_field' ) ? ( get_field( 'landing_hero_title' ) ?: 'Lorem ipsum dolor sit' ) : 'Lorem ipsum dolor sit';
-$landing_intro             = function_exists( 'get_field' ) ? ( get_field( 'landing_hero_intro' ) ?: $default_landing_intro ) : $default_landing_intro;
-$landing_contact_label     = function_exists( 'get_field' ) ? ( get_field( 'landing_contact_label' ) ?: 'Επικοινωνήστε μαζί μας' ) : 'Επικοινωνήστε μαζί μας';
-$landing_contact_url       = function_exists( 'get_field' ) ? ( get_field( 'landing_contact_url' ) ?: home_url( '/contact' ) ) : home_url( '/contact' );
-$landing_contact_icon      = function_exists( 'get_field' ) ? $image_url( get_field( 'landing_contact_icon' ) ) : '';
-$landing_cards             = array();
-$landing_feature_sections  = array();
+$landing_hero_title       = function_exists( 'get_field' ) ? ( get_field( 'landing_hero_title' ) ?: 'Lorem ipsum dolor sit' ) : 'Lorem ipsum dolor sit';
+$landing_intro            = function_exists( 'get_field' ) ? ( get_field( 'landing_hero_intro' ) ?: $default_landing_intro ) : $default_landing_intro;
+$landing_contact_label    = function_exists( 'get_field' ) ? ( get_field( 'landing_contact_label' ) ?: 'Επικοινωνήστε μαζί μας' ) : 'Επικοινωνήστε μαζί μας';
+$landing_contact_url      = function_exists( 'get_field' ) ? ( get_field( 'landing_contact_url' ) ?: home_url( '/contact' ) ) : home_url( '/contact' );
+$landing_contact_icon     = function_exists( 'get_field' ) ? $image_url( get_field( 'landing_contact_icon' ) ) : '';
+$landing_center_copy      = function_exists( 'get_field' ) ? ( get_field( 'landing_center_copy' ) ?: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.' ) : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.';
+$landing_cards            = array();
+$landing_feature_sections = array();
 
 if ( ! $landing_contact_icon ) {
 	$landing_contact_icon = 'https://www.figma.com/api/mcp/asset/17885700-e41c-473c-83e0-e768c4c6e062';
@@ -124,6 +125,38 @@ if ( empty( $landing_feature_sections ) ) {
 		)
 	);
 	?>
+
+	<section class="landing-page-hero-stage" aria-label="<?php esc_attr_e( 'Landing page gallery', 'flipnewmedia' ); ?>">
+		<div class="container-ext">
+			<div class="landing-page-hero-progress">
+				<span class="landing-page-hero__line" data-node-id="642:5741" aria-hidden="true"></span>
+			</div>
+		</div>
+		<div class="landing-page-hero__stage">
+			<div class="container-ext">
+				<div class="landing-page-hero__gallery js-landing-page-slider">
+					<?php foreach ( $landing_cards as $card ) : ?>
+						<article class="landing-page-hero__card <?php echo esc_attr( $card['class'] ); ?>">
+							<div class="landing-page-hero__media">
+								<img src="<?php echo esc_url( $card['image'] ); ?>" alt="" loading="lazy" decoding="async" />
+							</div>
+							<?php if ( $card['caption'] ) : ?>
+								<p class="landing-page-hero__caption"><?php echo esc_html( $card['caption'] ); ?></p>
+							<?php endif; ?>
+						</article>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<?php if ( $landing_center_copy ) : ?>
+		<section class="landing-page-center-copy" aria-label="<?php esc_attr_e( 'Landing page highlight text', 'flipnewmedia' ); ?>">
+			<div class="container-ext">
+				<p class="landing-page-center-copy__text" data-node-id="642:5713"><?php echo esc_html( $landing_center_copy ); ?></p>
+			</div>
+		</section>
+	<?php endif; ?>
 
 	<?php foreach ( $landing_feature_sections as $section_index => $section ) : ?>
 		<?php
@@ -185,6 +218,28 @@ document.addEventListener('DOMContentLoaded', function () {
 	if ($slider.hasClass('slick-initialized')) {
 		$slider.slick('unslick');
 	}
+
+	var progressLine = document.querySelector('.landing-page-hero__line');
+
+	function updateHeroProgress(slick, currentSlide) {
+		if (!progressLine || !slick) {
+			return;
+		}
+
+		var total = slick.slideCount || 1;
+		var index = Math.max(0, Math.min(total - 1, currentSlide || 0));
+		var progress = total > 1 ? (((index + 1) / total) * 100) : 100;
+
+		progressLine.style.setProperty('--landing-hero-progress', progress + '%');
+	}
+
+	$slider.on('init', function (event, slick) {
+		updateHeroProgress(slick, slick.currentSlide || 0);
+	});
+
+	$slider.on('afterChange', function (event, slick, currentSlide) {
+		updateHeroProgress(slick, currentSlide);
+	});
 
 	$slider.slick({
 		slidesToShow: 1,
