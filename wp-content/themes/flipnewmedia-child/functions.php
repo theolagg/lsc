@@ -1152,7 +1152,7 @@ function lsc_render_global_lens_cursor_script() {
 			});
 		}
 
-		[
+		var lensConfigs = [
 			{
 				target: '.blog-archive-card',
 				cursor: '.blog-archive-card__cursor',
@@ -1166,10 +1166,10 @@ function lsc_render_global_lens_cursor_script() {
 				textSelectors: []
 			},
 			{
-				target: '.bu-brand-categories__card',
+				target: '.bu-brand-categories__media',
 				cursor: '.bu-brand-categories__bubble',
-				imageSelectors: ['.bu-brand-categories__media img'],
-				textSelectors: ['.bu-brand-categories__item-title']
+				imageSelectors: ['img'],
+				textSelectors: []
 			},
 			{
 				target: '.bu-product-related__card',
@@ -1196,7 +1196,14 @@ function lsc_render_global_lens_cursor_script() {
 				imageSelectors: [],
 				textSelectors: ['.home-solutions-card-title', '.home-solutions-card-description']
 			}
-		].forEach(bindLens);
+		];
+
+		function bindAllLenses() {
+			lensConfigs.forEach(bindLens);
+		}
+
+		window.lscRefreshLensCursors = bindAllLenses;
+		bindAllLenses();
 	}());
 	</script>
 	<?php

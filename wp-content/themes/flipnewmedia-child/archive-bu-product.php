@@ -299,37 +299,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 jQuery(function ($) {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-
-  $(document)
-    .on('mouseenter', '.bu-products-latest__media', function () {
-      $(this).addClass('is-cursor-active');
-    })
-    .on('mousemove', '.bu-products-latest__media', function (event) {
-      var media = this;
-      var bubble = media.querySelector('.bu-products-latest__bubble');
-      if (!bubble) return;
-
-      var rect = media.getBoundingClientRect();
-      var x = event.clientX - rect.left;
-      var y = event.clientY - rect.top;
-      var padX = bubble.offsetWidth / 2;
-      var padY = bubble.offsetHeight / 2;
-
-      x = Math.max(padX, Math.min(rect.width - padX, x));
-      y = Math.max(padY, Math.min(rect.height - padY, y));
-
-      bubble.style.left = x + 'px';
-      bubble.style.top = y + 'px';
-    })
-    .on('mouseleave', '.bu-products-latest__media', function () {
-      $(this).removeClass('is-cursor-active');
-    });
-});
-</script>
-
-<script>
-jQuery(function ($) {
   var $slider = $('.js-bu-products-latest-slider');
   if (!$slider.length) return;
   if (typeof $.fn.slick !== 'function') {
@@ -347,12 +316,26 @@ jQuery(function ($) {
     $('.bu-products-latest__progress-bar').css('width', pct + '%');
   }
 
-  $slider.on('init', function (event, slick) {
+  function refreshLatestProductsLensCursor() {
+    if (typeof window.lscRefreshLensCursors !== 'function') return;
+
+    window.lscRefreshLensCursors();
+
+    window.requestAnimationFrame(function () {
+      if (typeof window.lscRefreshLensCursors === 'function') {
+        window.lscRefreshLensCursors();
+      }
+    });
+  }
+
+  $slider.on('init reInit setPosition', function (event, slick) {
     updateProgress(slick, slick.currentSlide || 0);
+    refreshLatestProductsLensCursor();
   });
 
   $slider.on('afterChange', function (event, slick, currentSlide) {
     updateProgress(slick, currentSlide);
+    refreshLatestProductsLensCursor();
   });
 
   $slider.slick({
@@ -385,6 +368,8 @@ jQuery(function ($) {
       }
     ]
   });
+
+  refreshLatestProductsLensCursor();
 });
 </script>
 
