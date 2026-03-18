@@ -100,8 +100,9 @@ $content = isset( $copy[ $lang ] ) ? $copy[ $lang ] : $copy['el'];
 
 								$summary = get_the_excerpt();
 								if ( ! $summary ) {
-									$summary = wp_trim_words( wp_strip_all_tags( get_the_content() ), 28, '...' );
+									$summary = wp_strip_all_tags( get_the_content() );
 								}
+								$summary = wp_trim_words( wp_strip_all_tags( $summary ), 24, '...' );
 								?>
 								<a href="<?php the_permalink(); ?>" class="career-card" aria-label="<?php the_title_attribute(); ?>">
 									<article class="career-card__inner">

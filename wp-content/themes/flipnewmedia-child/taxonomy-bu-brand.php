@@ -184,37 +184,6 @@ if ( $brand_slider_query->have_posts() ) {
 
 <script>
 jQuery(function ($) {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-
-  $(document)
-    .on('mouseenter', '.bu-brand-categories__card', function () {
-      $(this).addClass('is-cursor-active');
-    })
-    .on('mousemove', '.bu-brand-categories__card', function (event) {
-      var card = this;
-      var bubble = card.querySelector('.bu-brand-categories__bubble');
-      if (!bubble) return;
-
-      var rect = card.getBoundingClientRect();
-      var x = event.clientX - rect.left;
-      var y = event.clientY - rect.top;
-      var padX = bubble.offsetWidth / 2;
-      var padY = bubble.offsetHeight / 2;
-
-      x = Math.max(padX, Math.min(rect.width - padX, x));
-      y = Math.max(padY, Math.min(rect.height - padY, y));
-
-      bubble.style.left = x + 'px';
-      bubble.style.top = y + 'px';
-    })
-    .on('mouseleave', '.bu-brand-categories__card', function () {
-      $(this).removeClass('is-cursor-active');
-    });
-});
-</script>
-
-<script>
-jQuery(function ($) {
   var $slider = $('.js-bu-brand-categories-slider');
   var $tabs = $('.bu-brand-categories__tabs');
   var allSlidesHtml = $slider.html();
@@ -236,14 +205,27 @@ jQuery(function ($) {
     $('.bu-brand-categories__progress-bar').css('width', pct + '%');
   }
 
+  function refreshBrandLensCursor() {
+    if (typeof window.lscRefreshLensCursors !== 'function') return;
+
+    window.lscRefreshLensCursors();
+
+    window.requestAnimationFrame(function () {
+      if (typeof window.lscRefreshLensCursors === 'function') {
+        window.lscRefreshLensCursors();
+      }
+    });
+  }
+
   function initSlider() {
     if ($slider.hasClass('slick-initialized')) {
       $slider.slick('unslick');
     }
 
-    $slider.off('init afterChange');
-    $slider.on('init afterChange', function () {
+    $slider.off('init afterChange reInit setPosition');
+    $slider.on('init afterChange reInit setPosition', function () {
       updateProgress();
+      refreshBrandLensCursor();
     });
 
     $slider.slick({
@@ -273,6 +255,8 @@ jQuery(function ($) {
         }
       ]
     });
+
+    refreshBrandLensCursor();
   }
 
   function getSlidesMarkup(categoryId) {
@@ -298,6 +282,7 @@ jQuery(function ($) {
     }
 
     $slider.html(filteredMarkup);
+    refreshBrandLensCursor();
 
     if (!$slider.children('.bu-brand-categories__slide').length) {
       $('.bu-brand-categories__progress-bar').css('width', '0');
