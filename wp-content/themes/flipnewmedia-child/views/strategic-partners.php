@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   var $slider = $('.js-home-partners-slider');
+  var mobileQuery = window.matchMedia('(max-width: 991px)');
   if (!$slider.length) {
     return;
   }
@@ -230,30 +231,41 @@ document.addEventListener('DOMContentLoaded', function () {
     nextArrow: '<button type="button" class="slick-next" aria-label="Next partner"></button>'
   });
 
-  $slider.off('.partnersCursor');
-  $slider.on('mouseenter.partnersCursor', '.home-partners-media', function () {
-    this.classList.add('is-cursor-active');
-  });
+  function syncPartnersCursor() {
+    $slider.off('.partnersCursor');
+    $slider.find('.home-partners-media').removeClass('is-cursor-active');
 
-  $slider.on('mousemove.partnersCursor', '.home-partners-media', function (event) {
-    var bubble = this.querySelector('.home-partners-more');
-    if (!bubble) return;
+    if (mobileQuery.matches) {
+      return;
+    }
 
-    var rect = this.getBoundingClientRect();
-    var x = event.clientX - rect.left;
-    var y = event.clientY - rect.top;
-    var pad = 24;
+    $slider.on('mouseenter.partnersCursor', '.home-partners-media', function () {
+      this.classList.add('is-cursor-active');
+    });
 
-    x = Math.max(pad, Math.min(rect.width - pad, x));
-    y = Math.max(pad, Math.min(rect.height - pad, y));
+    $slider.on('mousemove.partnersCursor', '.home-partners-media', function (event) {
+      var bubble = this.querySelector('.home-partners-more');
+      if (!bubble) return;
 
-    bubble.style.left = x + 'px';
-    bubble.style.top = y + 'px';
-  });
+      var rect = this.getBoundingClientRect();
+      var x = event.clientX - rect.left;
+      var y = event.clientY - rect.top;
+      var pad = 24;
 
-  $slider.on('mouseleave.partnersCursor', '.home-partners-media', function () {
-    this.classList.remove('is-cursor-active');
-  });
+      x = Math.max(pad, Math.min(rect.width - pad, x));
+      y = Math.max(pad, Math.min(rect.height - pad, y));
+
+      bubble.style.left = x + 'px';
+      bubble.style.top = y + 'px';
+    });
+
+    $slider.on('mouseleave.partnersCursor', '.home-partners-media', function () {
+      this.classList.remove('is-cursor-active');
+    });
+  }
+
+  syncPartnersCursor();
+  $(window).off('resize.strategicPartnersCursor').on('resize.strategicPartnersCursor', syncPartnersCursor);
 });
 </script>
 

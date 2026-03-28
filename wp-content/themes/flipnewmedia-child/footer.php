@@ -141,6 +141,60 @@ if ( 'ok' === $lsc_footer_status && 'newsletter' === $lsc_footer_form ) {
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
+        function syncMobileFooterCopy() {
+          var isMobile = window.matchMedia('(max-width: 991px)').matches;
+          var introTitle = document.querySelector('.lsc-footer__intro h2');
+          var socialLabel = document.querySelector('.lsc-footer__social p');
+          var newsletterConsent = document.querySelector('.lsc-footer__consent--light p');
+          var contactConsent = document.querySelector('.lsc-footer__consent--dark p');
+          var nameInput = document.querySelector('.lsc-footer__contact-form input[name="full_name"]');
+          var phoneInput = document.querySelector('.lsc-footer__contact-form input[name="phone"]');
+          var emailInput = document.querySelector('.lsc-footer__contact-form input[name="email"]');
+          var messageInput = document.querySelector('.lsc-footer__contact-form textarea[name="message"]');
+          var sendButton = document.querySelector('.lsc-footer__send-btn');
+
+          if (introTitle) {
+            if (!introTitle.dataset.desktopHtml) introTitle.dataset.desktopHtml = introTitle.innerHTML;
+            introTitle.innerHTML = isMobile ? 'Give us a call' : introTitle.dataset.desktopHtml;
+          }
+
+          if (socialLabel) {
+            if (!socialLabel.dataset.desktopHtml) socialLabel.dataset.desktopHtml = socialLabel.innerHTML;
+            socialLabel.innerHTML = isMobile ? 'or <span>connect</span> with us online' : socialLabel.dataset.desktopHtml;
+          }
+
+          [newsletterConsent, contactConsent].forEach(function (node) {
+            if (!node) return;
+            if (!node.dataset.desktopText) node.dataset.desktopText = node.textContent;
+            node.textContent = isMobile
+              ? 'BY COMPLETING AND SENDING YOUR DATA, YOU AGREE TO THE PRIVACY POLICY'
+              : node.dataset.desktopText;
+          });
+
+          [
+            [nameInput, 'Name:'],
+            [phoneInput, 'Phone:'],
+            [emailInput, 'Email:'],
+            [messageInput, 'Massage:']
+          ].forEach(function (entry) {
+            var field = entry[0];
+            var mobilePlaceholder = entry[1];
+            if (!field) return;
+            if (!field.dataset.desktopPlaceholder) field.dataset.desktopPlaceholder = field.getAttribute('placeholder') || '';
+            if (!field.dataset.desktopAriaLabel) field.dataset.desktopAriaLabel = field.getAttribute('aria-label') || '';
+            field.setAttribute('placeholder', isMobile ? mobilePlaceholder : field.dataset.desktopPlaceholder);
+            field.setAttribute('aria-label', isMobile ? mobilePlaceholder.replace(':', '') : field.dataset.desktopAriaLabel);
+          });
+
+          if (sendButton) {
+            if (!sendButton.dataset.desktopText) sendButton.dataset.desktopText = sendButton.textContent;
+            sendButton.textContent = isMobile ? 'Submit' : sendButton.dataset.desktopText;
+          }
+        }
+
+        syncMobileFooterCopy();
+        window.addEventListener('resize', syncMobileFooterCopy);
+
         document.querySelectorAll('.js-lsc-consent-form').forEach(function (form) {
           var toggle = form.querySelector('.js-lsc-consent-toggle');
           var submits = form.querySelectorAll('button[type="submit"]');

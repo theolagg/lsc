@@ -78,7 +78,10 @@ if ( $brand_slider_query->have_posts() ) {
 			</video>
 			<div class="bu-brand-hero__visual-overlay" aria-hidden="true"></div>
 			<div class="container-ext bu-brand-hero__visual-inner">
-				<h1 class="bu-brand-hero__title" data-node-id="642:4365"><?php echo esc_html( $term->name ); ?></h1>
+				<h1 class="bu-brand-hero__title" data-node-id="642:4365">
+					<span class="bu-brand-hero__title-desktop"><?php echo esc_html( $term->name ); ?></span>
+					<span class="bu-brand-hero__title-mobile"><?php echo esc_html( $brand_intro_title ); ?></span>
+				</h1>
 			</div>
 			<div class="bu-brand-hero__fade" aria-hidden="true"></div>
 		</div>
@@ -138,6 +141,7 @@ if ( $brand_slider_query->have_posts() ) {
 								$product_id        = get_the_ID();
 								$product_title     = get_the_title();
 								$product_permalink = get_permalink();
+								$product_excerpt   = get_the_excerpt();
 								$product_image     = get_the_post_thumbnail(
 									$product_id,
 									'large',
@@ -165,6 +169,9 @@ if ( $brand_slider_query->have_posts() ) {
 											</span>
 										</a>
 										<h3 class="bu-brand-categories__item-title"><?php echo esc_html( $product_title ); ?></h3>
+										<?php if ( $product_excerpt ) : ?>
+											<p class="bu-brand-categories__item-excerpt"><?php echo esc_html( wp_trim_words( $product_excerpt, 20 ) ); ?></p>
+										<?php endif; ?>
 									</div>
 								</article>
 							<?php endwhile; ?>
@@ -244,13 +251,10 @@ jQuery(function ($) {
         {
           breakpoint: 991,
           settings: {
-            slidesToShow: 2
-          }
-        },
-        {
-          breakpoint: 767,
-          settings: {
-            slidesToShow: 1
+            slidesToShow: 1,
+            centerMode: true,
+            centerPadding: '24px',
+            swipeToSlide: true
           }
         }
       ]

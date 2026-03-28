@@ -291,6 +291,23 @@ if ( function_exists( 'get_field' ) ) {
 	}
 }
 
+$partner_logo_rows = array(
+	array(),
+	array(),
+);
+
+foreach ( array_values( $partner_logo_cards ) as $logo_index => $logo_src ) {
+	$partner_logo_rows[ $logo_index % 2 ][] = $logo_src;
+}
+
+if ( empty( $partner_logo_rows[0] ) ) {
+	$partner_logo_rows[0] = $partner_logo_cards;
+}
+
+if ( empty( $partner_logo_rows[1] ) ) {
+	$partner_logo_rows[1] = $partner_logo_rows[0];
+}
+
 $news_query_builder = static function ( $category_id = 0 ) {
 	$args = array(
 		'post_type'           => 'post',
@@ -450,6 +467,7 @@ if ( ! $news_archive_url ) {
 		</video>
 		<div class="container-ext home-solutions-grid">
 			<div class="home-solutions-copy">
+				<span class="home-solutions-eyebrow"><?php esc_html_e( 'Business Units', 'flipnewmedia' ); ?></span>
 				<h2 class="home-solutions-title home-section-heading home-section-heading--inverse" data-node-id="77:1048"><?php echo nl2br( esc_html( $solutions_title ) ); ?></h2>
 				<span class="home-solutions-divider" data-node-id="77:1055" aria-hidden="true"></span>
 				<p class="home-solutions-description home-body-copy home-body-copy--inverse" data-node-id="77:1056"><?php echo esc_html( $solutions_desc ); ?></p>
@@ -489,6 +507,9 @@ if ( ! $news_archive_url ) {
 						</div>
 					</article>
 				<?php endforeach; ?>
+			</div>
+			<div class="home-solutions-progress" aria-hidden="true">
+				<span class="home-solutions-progress-bar"></span>
 			</div>
 		</div>
 	</section>
@@ -540,9 +561,12 @@ if ( ! $news_archive_url ) {
 				<?php endforeach; ?>
 			</div>
 
+			<div class="home-news-progress" aria-hidden="true"></div>
+
 			<div class="home-news-cta-wrap">
 				<a class="home-news-cta" href="<?php echo esc_url( $news_archive_url ); ?>">
 					<span class="home-news-cta-text"><?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?></span>
+					<span class="home-news-cta-text home-news-cta-text--mobile"><?php esc_html_e( 'Δείτε τα όλα', 'flipnewmedia' ); ?></span>
 					<span class="home-news-cta-arrow" aria-hidden="true"></span>
 				</a>
 			</div>
@@ -579,6 +603,28 @@ if ( ! $news_archive_url ) {
 						<img src="<?php echo esc_url( $logo_src ); ?>" alt="<?php esc_attr_e( 'Partner brand', 'flipnewmedia' ); ?>" loading="lazy" decoding="async" />
 					</div>
 				</article>
+			<?php endforeach; ?>
+		</div>
+		<div class="home-partner-logos-mobile">
+			<?php foreach ( $partner_logo_rows as $row_index => $row_logos ) : ?>
+				<div class="home-partner-logos-row home-partner-logos-row--<?php echo 0 === $row_index ? 'forward' : 'reverse'; ?>">
+					<div class="home-partner-logos-track">
+						<?php foreach ( $row_logos as $logo_src ) : ?>
+							<article class="home-partner-logos-mobile-slide">
+								<div class="home-partner-logos-card home-elevated-card home-logo-card">
+									<img src="<?php echo esc_url( $logo_src ); ?>" alt="<?php esc_attr_e( 'Partner brand', 'flipnewmedia' ); ?>" loading="lazy" decoding="async" />
+								</div>
+							</article>
+						<?php endforeach; ?>
+						<?php foreach ( $row_logos as $logo_src ) : ?>
+							<article class="home-partner-logos-mobile-slide" aria-hidden="true">
+								<div class="home-partner-logos-card home-elevated-card home-logo-card">
+									<img src="<?php echo esc_url( $logo_src ); ?>" alt="" loading="lazy" decoding="async" />
+								</div>
+							</article>
+						<?php endforeach; ?>
+					</div>
+				</div>
 			<?php endforeach; ?>
 		</div>
 	</section>
@@ -640,6 +686,10 @@ if ( ! $news_archive_url ) {
 			var grid = document.querySelector('.js-home-news-grid');
 			var payloadNode = document.getElementById('home-news-data');
 			if (!section || !grid || !payloadNode) return;
+			var progressWrap = section.querySelector('.home-news-progress');
+			var hasJquery = typeof window.jQuery !== 'undefined';
+			var $ = hasJquery ? window.jQuery : null;
+			var hasSlick = Boolean($ && typeof $.fn.slick === 'function');
 
 			var newsMap = {};
 			try {
@@ -651,6 +701,52 @@ if ( ! $news_archive_url ) {
 			var tabs = section.querySelectorAll('.home-news-filter[data-tab]');
 			if (!tabs.length) return;
 
+			function isMobileNews() {
+				return window.matchMedia('(max-width: 991px)').matches;
+			}
+
+			function syncNewsSlider() {
+				if (!hasSlick) return;
+
+				var $grid = $(grid);
+
+				if (isMobileNews()) {
+					if (!$grid.hasClass('slick-initialized')) {
+						$grid.slick({
+							slidesToShow: 1,
+							slidesToScroll: 1,
+							infinite: false,
+							arrows: false,
+							dots: true,
+							appendDots: progressWrap ? $(progressWrap) : $grid,
+							customPaging: function (slider, i) {
+								return '<button type="button" aria-label="Go to news item ' + (i + 1) + '"></button>';
+							},
+							adaptiveHeight: true,
+							swipe: true,
+							draggable: true,
+							touchMove: true,
+							swipeToSlide: true,
+							waitForAnimate: false,
+							speed: 450,
+							touchThreshold: 12
+						});
+					} else {
+						$grid.slick('setPosition');
+					}
+
+					return;
+				}
+
+				if ($grid.hasClass('slick-initialized')) {
+					$grid.slick('unslick');
+				}
+
+				if (progressWrap) {
+					progressWrap.innerHTML = '';
+				}
+			}
+
 			function escapeHtml(value) {
 				return String(value || '')
 					.replace(/&/g, '&amp;')
@@ -661,6 +757,13 @@ if ( ! $news_archive_url ) {
 			}
 
 			function renderCards(tabKey) {
+				if (hasSlick) {
+					var $existingGrid = $(grid);
+					if ($existingGrid.hasClass('slick-initialized')) {
+						$existingGrid.slick('unslick');
+					}
+				}
+
 				var cards = Array.isArray(newsMap[tabKey]) ? newsMap[tabKey] : [];
 				if (!cards.length) {
 					grid.innerHTML = '<p class="home-news-empty"><?php echo esc_js( __( 'Δεν βρέθηκαν άρθρα σε αυτή την κατηγορία.', 'flipnewmedia' ) ); ?></p>';
@@ -686,6 +789,8 @@ if ( ! $news_archive_url ) {
 						'</article>'
 					);
 				}).join('');
+
+				syncNewsSlider();
 			}
 
 			tabs.forEach(function (tab) {
@@ -699,6 +804,9 @@ if ( ! $news_archive_url ) {
 					renderCards(tab.getAttribute('data-tab') || 'all');
 				});
 			});
+
+			syncNewsSlider();
+			window.addEventListener('resize', syncNewsSlider);
 		}
 
 		function initHomeSolutionsAccordion() {
@@ -707,6 +815,16 @@ if ( ! $news_archive_url ) {
 
 			var cards = Array.prototype.slice.call(section.querySelectorAll('.home-solutions-card'));
 			if (!cards.length) return;
+			var cardsWrap = section.querySelector('.js-home-solutions-accordion');
+			var progressWrap = section.querySelector('.home-solutions-progress');
+			var progressBar = progressWrap ? progressWrap.querySelector('.home-solutions-progress-bar') : null;
+			var hasJquery = typeof window.jQuery !== 'undefined';
+			var $ = hasJquery ? window.jQuery : null;
+			var hasSlick = Boolean($ && typeof $.fn.slick === 'function');
+
+			function isMobileSolutions() {
+				return window.matchMedia('(max-width: 991px)').matches;
+			}
 
 			function closeCard(card) {
 				var toggle = card.querySelector('.home-solutions-card-toggle');
@@ -724,16 +842,38 @@ if ( ! $news_archive_url ) {
 				if (panel) panel.hidden = false;
 			}
 
-			if (!cards.some(function (card) { return card.classList.contains('is-active'); })) {
-				openCard(cards[0]);
+			function openAllCards() {
+				cards.forEach(function (card) {
+					openCard(card);
+				});
 			}
 
-			cards.forEach(function (card) {
+			function ensureDesktopState() {
+				var activeCards = cards.filter(function (card) {
+					return card.classList.contains('is-active');
+				});
+
+				if (!activeCards.length) {
+					openCard(cards[0]);
+					return;
+				}
+
+				activeCards.slice(1).forEach(function (card) {
+					closeCard(card);
+				});
+			}
+
+			function bindDesktopEvents() {
+				cards.forEach(function (card) {
 				var toggle = card.querySelector('.home-solutions-card-toggle');
 				var cursor = card.querySelector('.home-solutions-card-cursor');
-				if (!toggle) return;
+					if (!toggle || card.dataset.solutionsBound === 'true') return;
+
+					card.dataset.solutionsBound = 'true';
 
 				toggle.addEventListener('click', function () {
+						if (isMobileSolutions()) return;
+
 					var isOpen = card.classList.contains('is-active');
 
 					cards.forEach(function (item) {
@@ -773,13 +913,80 @@ if ( ! $news_archive_url ) {
 						cursor.classList.remove('is-visible');
 					}
 				});
-			});
+				});
+			}
+
+			function syncMobileSlider() {
+				if (!cardsWrap) return;
+
+				if (isMobileSolutions()) {
+					openAllCards();
+
+					if (hasSlick) {
+						var $wrap = $(cardsWrap);
+						if (!$wrap.hasClass('slick-initialized')) {
+							$wrap.slick({
+								slidesToShow: 1,
+								slidesToScroll: 1,
+								infinite: false,
+								arrows: false,
+								adaptiveHeight: false,
+								variableWidth: true,
+								swipe: true,
+								swipeToSlide: true,
+								draggable: true,
+								touchMove: true,
+								waitForAnimate: false,
+								speed: 450,
+								touchThreshold: 12
+							});
+
+							$wrap.on('init.homeSolutionsProgress afterChange.homeSolutionsProgress', function (event, slick, currentSlide) {
+								if (!progressBar) return;
+
+								var index = typeof currentSlide === 'number' ? currentSlide : (slick.currentSlide || 0);
+								var total = slick.slideCount || cards.length || 1;
+								var progress = ((index + 1) / total) * 100;
+								progressBar.style.width = progress + '%';
+							});
+
+							$wrap.slick('setPosition');
+							if (progressBar) {
+								progressBar.style.width = (100 / cards.length) + '%';
+							}
+						} else {
+							$wrap.slick('setPosition');
+						}
+					}
+
+					return;
+				}
+
+				if (hasSlick) {
+					var $desktopWrap = $(cardsWrap);
+					if ($desktopWrap.hasClass('slick-initialized')) {
+						$desktopWrap.off('.homeSolutionsProgress');
+						$desktopWrap.slick('unslick');
+					}
+				}
+
+				if (progressBar) {
+					progressBar.style.width = (100 / cards.length) + '%';
+				}
+
+				ensureDesktopState();
+			}
+
+			bindDesktopEvents();
+			syncMobileSlider();
+			window.addEventListener('resize', syncMobileSlider);
 		}
 
 		function initHomePartnersSlider() {
 			if (typeof window.jQuery === 'undefined') return;
 			var $ = window.jQuery;
 			if (typeof $.fn.slick !== 'function') return;
+			var mobileQuery = window.matchMedia('(max-width: 991px)');
 
 			var $slider = $('.js-home-partners-slider');
 			if (!$slider.length) return;
@@ -800,74 +1007,99 @@ if ( ! $news_archive_url ) {
 				nextArrow: '<button type="button" class="slick-next" aria-label="Next partner"></button>'
 			});
 
-			$slider.off('.partnersCursor');
-			$slider.on('mouseenter.partnersCursor', '.home-partners-media', function () {
-				this.classList.add('is-cursor-active');
-			});
+			function syncPartnerCursorMode() {
+				$slider.off('.partnersCursor');
+				$slider.find('.home-partners-media').removeClass('is-cursor-active');
+				$slider.find('.home-partners-more').css({ left: '', top: '' });
 
-			$slider.on('mousemove.partnersCursor', '.home-partners-media', function (event) {
-				var bubble = this.querySelector('.home-partners-more');
-				if (!bubble) return;
+				if (mobileQuery.matches) {
+					return;
+				}
 
-				var rect = this.getBoundingClientRect();
-				var x = event.clientX - rect.left;
-				var y = event.clientY - rect.top;
-				var pad = 24;
+				$slider.on('mouseenter.partnersCursor', '.home-partners-media', function () {
+					this.classList.add('is-cursor-active');
+				});
 
-				x = Math.max(pad, Math.min(rect.width - pad, x));
-				y = Math.max(pad, Math.min(rect.height - pad, y));
+				$slider.on('mousemove.partnersCursor', '.home-partners-media', function (event) {
+					var bubble = this.querySelector('.home-partners-more');
+					if (!bubble) return;
 
-				bubble.style.left = x + 'px';
-				bubble.style.top = y + 'px';
-			});
+					var rect = this.getBoundingClientRect();
+					var x = event.clientX - rect.left;
+					var y = event.clientY - rect.top;
+					var pad = 24;
 
-			$slider.on('mouseleave.partnersCursor', '.home-partners-media', function () {
-				this.classList.remove('is-cursor-active');
-			});
+					x = Math.max(pad, Math.min(rect.width - pad, x));
+					y = Math.max(pad, Math.min(rect.height - pad, y));
+
+					bubble.style.left = x + 'px';
+					bubble.style.top = y + 'px';
+				});
+
+				$slider.on('mouseleave.partnersCursor', '.home-partners-media', function () {
+					this.classList.remove('is-cursor-active');
+				});
+			}
+
+			syncPartnerCursorMode();
+			window.addEventListener('resize', syncPartnerCursorMode);
 		}
 
 		function initHomePartnerLogosSlider() {
 			if (typeof window.jQuery === 'undefined') return;
 			var $ = window.jQuery;
 			if (typeof $.fn.slick !== 'function') return;
+			var mobileQuery = window.matchMedia('(max-width: 991px)');
 
 			var $slider = $('.js-home-partner-logos-slider');
 			if (!$slider.length) return;
 
-			if ($slider.hasClass('slick-initialized')) {
-				$slider.slick('unslick');
+			function syncPartnerLogosSlider() {
+				if (mobileQuery.matches) {
+					if ($slider.hasClass('slick-initialized')) {
+						$slider.slick('unslick');
+					}
+					return;
+				}
+
+				if ($slider.hasClass('slick-initialized')) {
+					return;
+				}
+
+				$slider.slick({
+					slidesToShow: 4,
+					slidesToScroll: 1,
+					infinite: true,
+					arrows: false,
+					dots: false,
+					speed: 500,
+					autoplay: true,
+					autoplaySpeed: 2800,
+					pauseOnHover: true,
+					variableWidth: true,
+					responsive: [
+						{
+							breakpoint: 1400,
+							settings: { slidesToShow: 4, variableWidth: true }
+						},
+						{
+							breakpoint: 1100,
+							settings: { slidesToShow: 3, variableWidth: false }
+						},
+						{
+							breakpoint: 768,
+							settings: { slidesToShow: 2, variableWidth: false }
+						},
+						{
+							breakpoint: 520,
+							settings: { slidesToShow: 1.2, variableWidth: false }
+						}
+					]
+				});
 			}
 
-			$slider.slick({
-				slidesToShow: 4,
-				slidesToScroll: 1,
-				infinite: true,
-				arrows: false,
-				dots: false,
-				speed: 500,
-				autoplay: true,
-				autoplaySpeed: 2800,
-				pauseOnHover: true,
-				variableWidth: true,
-				responsive: [
-					{
-						breakpoint: 1400,
-						settings: { slidesToShow: 4, variableWidth: true }
-					},
-					{
-						breakpoint: 1100,
-						settings: { slidesToShow: 3, variableWidth: false }
-					},
-					{
-						breakpoint: 768,
-						settings: { slidesToShow: 2, variableWidth: false }
-					},
-					{
-						breakpoint: 520,
-						settings: { slidesToShow: 1.2, variableWidth: false }
-					}
-				]
-			});
+			syncPartnerLogosSlider();
+			window.addEventListener('resize', syncPartnerLogosSlider);
 		}
 
 		if (document.readyState === 'loading') {
