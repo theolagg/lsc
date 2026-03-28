@@ -19,6 +19,8 @@ $bu_terms = get_terms(
 
 $bu_terms = is_wp_error( $bu_terms ) ? array() : array_values( $bu_terms );
 $term_columns = array_chunk( $bu_terms, 5 );
+$mobile_visible_terms = 4;
+$has_mobile_term_overflow = count( $bu_terms ) > $mobile_visible_terms;
 
 while ( count( $term_columns ) < 3 ) {
 	$term_columns[] = array();
@@ -48,6 +50,22 @@ $brand_terms = get_terms(
 	)
 );
 $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_terms );
+$brand_term_rows = array(
+	array(),
+	array(),
+);
+
+foreach ( array_values( $brand_terms ) as $brand_index => $brand_term ) {
+	$brand_term_rows[ $brand_index % 2 ][] = $brand_term;
+}
+
+if ( empty( $brand_term_rows[0] ) ) {
+	$brand_term_rows[0] = $brand_terms;
+}
+
+if ( empty( $brand_term_rows[1] ) ) {
+	$brand_term_rows[1] = $brand_term_rows[0];
+}
 ?>
 
 <main id="primary" class="site-main bu-products-archive">
@@ -67,9 +85,10 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 			<div class="bu-products-hero__line" data-node-id="642:5410" aria-hidden="true"></div>
 
 			<?php if ( ! empty( $bu_terms ) ) : ?>
-				<div class="bu-products-hero__grid">
+				<?php $mobile_term_index = 0; ?>
+				<div class="bu-products-hero__grid" id="bu-products-hero-grid">
 					<?php foreach ( $term_columns as $column_index => $column_terms ) : ?>
-						<div class="bu-products-hero__column bu-products-hero__column--<?php echo esc_attr( (string) ( $column_index + 1 ) ); ?>">
+						<div class="bu-products-hero__column bu-products-hero__column--<?php echo esc_attr( (string) ( $column_index + 1 ) ); ?><?php echo $has_mobile_term_overflow && $column_index > 0 ? ' bu-products-hero__column--mobile-hidden' : ''; ?>">
 							<?php foreach ( $column_terms as $term ) : ?>
 								<?php
 								$children = get_terms(
@@ -83,8 +102,13 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 								);
 								$children = is_wp_error( $children ) ? array() : array_values( $children );
 								$has_children = ! empty( $children );
+								$card_classes = 'bu-products-hero__card';
+
+								if ( $has_mobile_term_overflow && $mobile_term_index >= $mobile_visible_terms ) {
+									$card_classes .= ' bu-products-hero__card--mobile-hidden';
+								}
 								?>
-								<article class="bu-products-hero__card" data-term-id="<?php echo esc_attr( (string) $term->term_id ); ?>">
+								<article class="<?php echo esc_attr( $card_classes ); ?>" data-term-id="<?php echo esc_attr( (string) $term->term_id ); ?>">
 									<a class="bu-products-hero__card-link" href="<?php echo esc_url( get_term_link( $term ) ); ?>">
 										<span class="bu-products-hero__card-title"><?php echo esc_html( $term->name ); ?></span>
 									</a>
@@ -103,6 +127,7 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 										</button>
 									<?php endif; ?>
 								</article>
+								<?php $mobile_term_index++; ?>
 
 								<?php if ( $has_children ) : ?>
 									<div class="bu-products-modal" id="<?php echo esc_attr( 'bu-category-' . $term->term_id ); ?>" hidden>
@@ -141,6 +166,19 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 						</div>
 					<?php endforeach; ?>
 				</div>
+				<?php if ( $has_mobile_term_overflow ) : ?>
+					<div class="bu-products-hero__more">
+						<button
+							class="bu-products-hero__more-btn"
+							type="button"
+							data-bu-hero-more
+							aria-expanded="false"
+							aria-controls="bu-products-hero-grid"
+						>
+							<?php esc_html_e( 'Περισσότερα', 'flipnewmedia' ); ?>
+						</button>
+					</div>
+				<?php endif; ?>
 			<?php else : ?>
 				<p class="bu-products-hero__empty"><?php echo esc_html( $empty_message ); ?></p>
 			<?php endif; ?>
@@ -232,12 +270,82 @@ $brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_term
 					</div>
 				<?php endforeach; ?>
 			</div>
+			<div class="bu-brands-slider__mobile">
+				<?php foreach ( $brand_term_rows as $row_index => $row_terms ) : ?>
+					<div class="bu-brand-marquee-row bu-brand-marquee-row--<?php echo 0 === $row_index ? 'forward' : 'reverse'; ?>">
+						<div class="bu-brand-marquee-track">
+							<?php foreach ( $row_terms as $brand_term ) : ?>
+								<?php
+								$brand_link = get_term_link( $brand_term );
+								$brand_logo = '';
+
+								if ( function_exists( 'get_field' ) ) {
+									$brand_logo = get_field( 'logo', $brand_term ) ?: get_field( 'brand_logo', $brand_term ) ?: get_field( 'image', $brand_term );
+								}
+
+								$brand_logo_url = '';
+								if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
+									$brand_logo_url = $brand_logo['url'];
+								} elseif ( is_string( $brand_logo ) ) {
+									$brand_logo_url = $brand_logo;
+								}
+								?>
+								<div class="bu-brands-slider__mobile-item bu-brand-marquee-slide">
+									<a class="bu-brands-slider__card" href="<?php echo esc_url( $brand_link ); ?>" aria-label="<?php echo esc_attr( $brand_term->name ); ?>">
+										<?php if ( $brand_logo_url ) : ?>
+											<img class="bu-brands-slider__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="<?php echo esc_attr( $brand_term->name ); ?>" loading="lazy" decoding="async" />
+										<?php else : ?>
+											<span class="bu-brands-slider__name"><?php echo esc_html( $brand_term->name ); ?></span>
+										<?php endif; ?>
+									</a>
+								</div>
+							<?php endforeach; ?>
+							<?php foreach ( $row_terms as $brand_term ) : ?>
+								<?php
+								$brand_link = get_term_link( $brand_term );
+								$brand_logo = '';
+
+								if ( function_exists( 'get_field' ) ) {
+									$brand_logo = get_field( 'logo', $brand_term ) ?: get_field( 'brand_logo', $brand_term ) ?: get_field( 'image', $brand_term );
+								}
+
+								$brand_logo_url = '';
+								if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
+									$brand_logo_url = $brand_logo['url'];
+								} elseif ( is_string( $brand_logo ) ) {
+									$brand_logo_url = $brand_logo;
+								}
+								?>
+								<div class="bu-brands-slider__mobile-item bu-brand-marquee-slide" aria-hidden="true">
+									<a class="bu-brands-slider__card" href="<?php echo esc_url( $brand_link ); ?>" tabindex="-1">
+										<?php if ( $brand_logo_url ) : ?>
+											<img class="bu-brands-slider__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="" loading="lazy" decoding="async" />
+										<?php else : ?>
+											<span class="bu-brands-slider__name"><?php echo esc_html( $brand_term->name ); ?></span>
+										<?php endif; ?>
+									</a>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endforeach; ?>
+			</div>
 		</section>
 	<?php endif; ?>
 </main>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var heroSection = document.querySelector('.bu-products-hero');
+  var heroMoreButton = heroSection ? heroSection.querySelector('[data-bu-hero-more]') : null;
+
+  if (heroSection && heroMoreButton) {
+    heroMoreButton.addEventListener('click', function () {
+      heroSection.classList.add('is-mobile-expanded');
+      heroMoreButton.setAttribute('aria-expanded', 'true');
+    });
+  }
+
   var triggers = document.querySelectorAll('[data-modal-trigger]');
   if (!triggers.length) return;
 
@@ -357,13 +465,21 @@ jQuery(function ($) {
       {
         breakpoint: 991,
         settings: {
-          slidesToShow: 2
+          slidesToShow: 1,
+          arrows: false,
+          centerMode: true,
+          centerPadding: '24px',
+          swipeToSlide: true
         }
       },
       {
         breakpoint: 767,
         settings: {
-          slidesToShow: 1
+          slidesToShow: 1,
+          arrows: false,
+          centerMode: true,
+          centerPadding: '24px',
+          swipeToSlide: true
         }
       }
     ]
@@ -378,38 +494,52 @@ jQuery(function ($) {
   var $slider = $('.js-bu-brands-slider');
   if (!$slider.length) return;
   if (typeof $.fn.slick !== 'function') return;
-  if ($slider.hasClass('slick-initialized')) return;
+  var mobileQuery = window.matchMedia('(max-width: 991px)');
 
-  $slider.slick({
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    infinite: true,
-    arrows: false,
-    dots: false,
-    autoplay: true,
-    autoplaySpeed: 2500,
-    speed: 500,
-    responsive: [
-      {
-        breakpoint: 1280,
-        settings: {
-          slidesToShow: 4
-        }
-      },
-      {
-        breakpoint: 991,
-        settings: {
-          slidesToShow: 3
-        }
-      },
-      {
-        breakpoint: 767,
-        settings: {
-          slidesToShow: 2
-        }
+  function syncBrandSlider() {
+    if (mobileQuery.matches) {
+      if ($slider.hasClass('slick-initialized')) {
+        $slider.slick('unslick');
       }
-    ]
-  });
+      return;
+    }
+
+    if ($slider.hasClass('slick-initialized')) return;
+
+    $slider.slick({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      infinite: true,
+      arrows: false,
+      dots: false,
+      autoplay: true,
+      autoplaySpeed: 2500,
+      speed: 500,
+      responsive: [
+        {
+          breakpoint: 1280,
+          settings: {
+            slidesToShow: 4
+          }
+        },
+        {
+          breakpoint: 991,
+          settings: {
+            slidesToShow: 3
+          }
+        },
+        {
+          breakpoint: 767,
+          settings: {
+            slidesToShow: 2
+          }
+        }
+      ]
+    });
+  }
+
+  syncBrandSlider();
+  window.addEventListener('resize', syncBrandSlider);
 });
 </script>
 

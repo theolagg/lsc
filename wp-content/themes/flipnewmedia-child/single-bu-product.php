@@ -142,6 +142,23 @@ while ( have_posts() ) :
 		);
 		$category_brand_terms = is_wp_error( $category_brand_terms ) ? array() : array_values( $category_brand_terms );
 	}
+
+	$category_brand_rows = array(
+		array(),
+		array(),
+	);
+
+	foreach ( array_values( $category_brand_terms ) as $brand_index => $brand_term ) {
+		$category_brand_rows[ $brand_index % 2 ][] = $brand_term;
+	}
+
+	if ( empty( $category_brand_rows[0] ) ) {
+		$category_brand_rows[0] = $category_brand_terms;
+	}
+
+	if ( empty( $category_brand_rows[1] ) ) {
+		$category_brand_rows[1] = $category_brand_rows[0];
+	}
 	?>
 
 	<main id="primary" class="site-main bu-product-single">
@@ -180,6 +197,10 @@ while ( have_posts() ) :
 										</button>
 									</div>
 								<?php endforeach; ?>
+							</div>
+							<div class="bu-product-hero__thumbs-progress" aria-hidden="true">
+								<span class="bu-product-hero__thumbs-progress-track"></span>
+								<span class="bu-product-hero__thumbs-progress-bar js-bu-product-thumbs-progress"></span>
 							</div>
 						<?php endif; ?>
 					</div>
@@ -272,6 +293,10 @@ while ( have_posts() ) :
 						<?php wp_reset_postdata(); ?>
 						</div>
 					</div>
+					<div class="bu-product-related__progress" aria-hidden="true">
+						<span class="bu-product-related__progress-track"></span>
+						<span class="bu-product-related__progress-bar js-bu-product-related-progress"></span>
+					</div>
 				</div>
 			</section>
 		<?php endif; ?>
@@ -308,6 +333,70 @@ while ( have_posts() ) :
 						</div>
 					<?php endforeach; ?>
 				</div>
+				<div class="bu-product-brands__mobile">
+					<?php foreach ( $category_brand_rows as $row_index => $row_terms ) : ?>
+						<div class="bu-brand-marquee-row bu-brand-marquee-row--<?php echo 0 === $row_index ? 'forward' : 'reverse'; ?>">
+							<div class="bu-brand-marquee-track">
+								<?php foreach ( $row_terms as $brand_term ) : ?>
+									<?php
+									$brand_link = get_term_link( $brand_term );
+									$brand_logo = '';
+
+									if ( function_exists( 'get_field' ) ) {
+										$brand_logo = get_field( 'logo', $brand_term ) ?: get_field( 'brand_logo', $brand_term ) ?: get_field( 'image', $brand_term );
+									}
+
+									$brand_logo_url = '';
+									if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
+										$brand_logo_url = $brand_logo['url'];
+									} elseif ( is_numeric( $brand_logo ) ) {
+										$brand_logo_url = wp_get_attachment_image_url( (int) $brand_logo, 'medium' );
+									} elseif ( is_string( $brand_logo ) ) {
+										$brand_logo_url = $brand_logo;
+									}
+									?>
+									<div class="bu-product-brands__mobile-item bu-brand-marquee-slide">
+										<a class="bu-product-brands__card" href="<?php echo esc_url( $brand_link ); ?>" aria-label="<?php echo esc_attr( $brand_term->name ); ?>">
+											<?php if ( $brand_logo_url ) : ?>
+												<img class="bu-product-brands__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="<?php echo esc_attr( $brand_term->name ); ?>" loading="lazy" decoding="async" />
+											<?php else : ?>
+												<span class="bu-product-brands__name"><?php echo esc_html( $brand_term->name ); ?></span>
+											<?php endif; ?>
+										</a>
+									</div>
+								<?php endforeach; ?>
+								<?php foreach ( $row_terms as $brand_term ) : ?>
+									<?php
+									$brand_link = get_term_link( $brand_term );
+									$brand_logo = '';
+
+									if ( function_exists( 'get_field' ) ) {
+										$brand_logo = get_field( 'logo', $brand_term ) ?: get_field( 'brand_logo', $brand_term ) ?: get_field( 'image', $brand_term );
+									}
+
+									$brand_logo_url = '';
+									if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
+										$brand_logo_url = $brand_logo['url'];
+									} elseif ( is_numeric( $brand_logo ) ) {
+										$brand_logo_url = wp_get_attachment_image_url( (int) $brand_logo, 'medium' );
+									} elseif ( is_string( $brand_logo ) ) {
+										$brand_logo_url = $brand_logo;
+									}
+									?>
+									<div class="bu-product-brands__mobile-item bu-brand-marquee-slide" aria-hidden="true">
+										<a class="bu-product-brands__card" href="<?php echo esc_url( $brand_link ); ?>" tabindex="-1">
+											<?php if ( $brand_logo_url ) : ?>
+												<img class="bu-product-brands__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="" loading="lazy" decoding="async" />
+											<?php else : ?>
+												<span class="bu-product-brands__name"><?php echo esc_html( $brand_term->name ); ?></span>
+											<?php endif; ?>
+										</a>
+									</div>
+								<?php endforeach; ?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
 			</section>
 		<?php endif; ?>
 	</main>
@@ -335,6 +424,7 @@ while ( have_posts() ) :
 	    var $section = $('.bu-product-hero');
 	    var $main = $(mainSelector);
 	    var $thumbs = $(thumbsSelector);
+	    var $thumbsProgress = $section.find('.js-bu-product-thumbs-progress');
 	    var $prev = $section.find('.bu-product-hero__nav--prev');
 	    var $next = $section.find('.bu-product-hero__nav--next');
 	    if (!$section.length || !$main.length || !$thumbs.length) return;
@@ -344,13 +434,23 @@ while ( have_posts() ) :
 	      $thumbs.find('.bu-product-hero__thumb[data-slide-index="' + index + '"]').addClass('is-active');
 	    }
 
+	    function updateThumbsProgress(index) {
+	      if (!$thumbsProgress.length || totalSlides < 1) return;
+
+	      var currentStep = Math.min(totalSlides, Math.max(1, (index || 0) + 1));
+	      var progress = (currentStep / totalSlides) * 100;
+	      $thumbsProgress.css('width', progress + '%');
+	    }
+
 	    if (!initialized) {
 	      $main.on('init', function () {
 	        syncThumbState(0);
+	        updateThumbsProgress(0);
 	      });
 
 	      $main.on('afterChange', function (event, slick, currentSlide) {
 	        syncThumbState(currentSlide || 0);
+	        updateThumbsProgress(currentSlide || 0);
 	      });
 
 	      $main.slick({
@@ -380,7 +480,7 @@ while ( have_posts() ) :
 	        speed: 300,
 	        responsive: [
 	          {
-	            breakpoint: 767,
+	            breakpoint: 991,
 	            settings: {
 	              vertical: false,
 	              verticalSwiping: false,
@@ -416,6 +516,7 @@ while ( have_posts() ) :
 	          $thumbs.slick('slickGoTo', index);
 	        }
 	        syncThumbState(index);
+	        updateThumbsProgress(index);
 	      });
 	    }
 
@@ -448,7 +549,31 @@ while ( have_posts() ) :
 
 	    var $ = window.jQuery;
 	    var $slider = $('.js-bu-product-related-slider');
+	    var $progressBar = $('.js-bu-product-related-progress');
 	    if (!$slider.length || $slider.hasClass('slick-initialized')) return;
+
+	    function updateRelatedProgress(slick, currentSlide) {
+	      if (!$progressBar.length || !slick || !slick.slideCount) return;
+
+	      var slidesToShow = slick.options.slidesToShow || 1;
+	      var totalSteps = Math.max(1, slick.slideCount - slidesToShow + 1);
+	      var currentStep = Math.min(totalSteps, (currentSlide || 0) + 1);
+	      var progress = (currentStep / totalSteps) * 100;
+
+	      $progressBar.css('width', progress + '%');
+	    }
+
+	    $slider.on('init', function (event, slick) {
+	      updateRelatedProgress(slick, slick.currentSlide || 0);
+	    });
+
+	    $slider.on('afterChange', function (event, slick, currentSlide) {
+	      updateRelatedProgress(slick, currentSlide);
+	    });
+
+	    $slider.on('setPosition breakpoint reInit', function (event, slick) {
+	      updateRelatedProgress(slick, slick.currentSlide || 0);
+	    });
 
 	    $slider.slick({
 	      slidesToShow: 3,
@@ -466,13 +591,10 @@ while ( have_posts() ) :
 	        {
 	          breakpoint: 991,
 	          settings: {
-	            slidesToShow: 2
-	          }
-	        },
-	        {
-	          breakpoint: 767,
-	          settings: {
-	            slidesToShow: 1
+	            slidesToShow: 1,
+	            centerMode: true,
+	            centerPadding: '24px',
+	            swipeToSlide: true
 	          }
 	        }
 	      ]
@@ -534,38 +656,47 @@ while ( have_posts() ) :
 
 	    var $ = window.jQuery;
 	    var $slider = $('.js-bu-product-brands-slider');
-	    if (!$slider.length || $slider.hasClass('slick-initialized')) return;
+	    if (!$slider.length) return;
+	    var mobileQuery = window.matchMedia('(max-width: 991px)');
 
-	    $slider.slick({
-	      slidesToShow: 4,
-	      slidesToScroll: 1,
-	      infinite: true,
-	      arrows: false,
-	      dots: false,
-	      autoplay: true,
-	      autoplaySpeed: 2500,
-	      speed: 500,
-	      responsive: [
-	        {
-	          breakpoint: 1280,
-	          settings: {
-	            slidesToShow: 4
-	          }
-	        },
-	        {
-	          breakpoint: 991,
-	          settings: {
-	            slidesToShow: 3
-	          }
-	        },
-	        {
-	          breakpoint: 767,
-	          settings: {
-	            slidesToShow: 2
-	          }
+	    function syncProductBrandsSlider() {
+	      if (mobileQuery.matches) {
+	        if ($slider.hasClass('slick-initialized')) {
+	          $slider.slick('unslick');
 	        }
-	      ]
-	    });
+	        return;
+	      }
+
+	      if ($slider.hasClass('slick-initialized')) return;
+
+	      $slider.slick({
+	        slidesToShow: 4,
+	        slidesToScroll: 1,
+	        infinite: true,
+	        arrows: false,
+	        dots: false,
+	        autoplay: true,
+	        autoplaySpeed: 2500,
+	        speed: 500,
+	        responsive: [
+	          {
+	            breakpoint: 1280,
+	            settings: {
+	              slidesToShow: 4
+	            }
+	          },
+	          {
+	            breakpoint: 991,
+	            settings: {
+	              slidesToShow: 3
+	            }
+	          }
+	        ]
+	      });
+	    }
+
+	    syncProductBrandsSlider();
+	    window.addEventListener('resize', syncProductBrandsSlider);
 	  }
 
 	  initBrandsSlider();

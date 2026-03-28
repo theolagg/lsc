@@ -76,6 +76,23 @@ if ( ! empty( $brand_source_query->posts ) ) {
 	);
 	$brand_terms = is_wp_error( $brand_terms ) ? array() : array_values( $brand_terms );
 }
+
+$brand_term_rows = array(
+	array(),
+	array(),
+);
+
+foreach ( array_values( $brand_terms ) as $brand_index => $brand_term ) {
+	$brand_term_rows[ $brand_index % 2 ][] = $brand_term;
+}
+
+if ( empty( $brand_term_rows[0] ) ) {
+	$brand_term_rows[0] = $brand_terms;
+}
+
+if ( empty( $brand_term_rows[1] ) ) {
+	$brand_term_rows[1] = $brand_term_rows[0];
+}
 ?>
 
 <main id="primary" class="site-main bu-category-taxonomy">
@@ -115,6 +132,7 @@ if ( ! empty( $brand_source_query->posts ) ) {
 							$product_id        = get_the_ID();
 							$product_title     = get_the_title();
 							$product_permalink = get_permalink();
+							$product_excerpt   = get_the_excerpt();
 							$product_image     = get_the_post_thumbnail(
 								$product_id,
 								'large',
@@ -135,6 +153,12 @@ if ( ! empty( $brand_source_query->posts ) ) {
 									$pdf_url = $pdf_field;
 								}
 							}
+
+							if ( ! $product_excerpt ) {
+								$product_excerpt = wp_strip_all_tags( get_the_content() );
+							}
+
+							$product_excerpt = wp_trim_words( wp_strip_all_tags( $product_excerpt ), 18, '...' );
 							?>
 							<article class="bu-category-featured__slide">
 								<div class="bu-category-featured__card">
@@ -156,12 +180,20 @@ if ( ! empty( $brand_source_query->posts ) ) {
 									</a>
 
 									<h3 class="bu-category-featured__item-title"><?php echo esc_html( $product_title ); ?></h3>
+									<?php if ( $product_excerpt ) : ?>
+										<p class="bu-category-featured__item-excerpt"><?php echo esc_html( $product_excerpt ); ?></p>
+									<?php endif; ?>
 								</div>
 							</article>
 						<?php endwhile; ?>
 						<?php wp_reset_postdata(); ?>
 					</div>
 				</div>
+				<div class="bu-category-featured__progress" aria-hidden="true">
+					<span class="bu-category-featured__progress-track"></span>
+					<span class="bu-category-featured__progress-bar js-bu-category-featured-progress"></span>
+				</div>
+
 			</div>
 		</section>
 	<?php endif; ?>
@@ -196,6 +228,66 @@ if ( ! empty( $brand_source_query->posts ) ) {
 					</div>
 				<?php endforeach; ?>
 			</div>
+			<div class="bu-category-brands__mobile">
+				<?php foreach ( $brand_term_rows as $row_index => $row_terms ) : ?>
+					<div class="bu-brand-marquee-row bu-brand-marquee-row--<?php echo 0 === $row_index ? 'forward' : 'reverse'; ?>">
+						<div class="bu-brand-marquee-track">
+							<?php foreach ( $row_terms as $brand_term ) : ?>
+								<?php
+								$brand_link = get_term_link( $brand_term );
+								$brand_logo = '';
+
+								if ( function_exists( 'get_field' ) ) {
+									$brand_logo = get_field( 'logo', $brand_term ) ?: get_field( 'brand_logo', $brand_term ) ?: get_field( 'image', $brand_term );
+								}
+
+								$brand_logo_url = '';
+								if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
+									$brand_logo_url = $brand_logo['url'];
+								} elseif ( is_string( $brand_logo ) ) {
+									$brand_logo_url = $brand_logo;
+								}
+								?>
+								<div class="bu-category-brands__mobile-item bu-brand-marquee-slide">
+									<a class="bu-category-brands__card" href="<?php echo esc_url( $brand_link ); ?>" aria-label="<?php echo esc_attr( $brand_term->name ); ?>">
+										<?php if ( $brand_logo_url ) : ?>
+											<img class="bu-category-brands__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="<?php echo esc_attr( $brand_term->name ); ?>" loading="lazy" decoding="async" />
+										<?php else : ?>
+											<span class="bu-category-brands__name"><?php echo esc_html( $brand_term->name ); ?></span>
+										<?php endif; ?>
+									</a>
+								</div>
+							<?php endforeach; ?>
+							<?php foreach ( $row_terms as $brand_term ) : ?>
+								<?php
+								$brand_link = get_term_link( $brand_term );
+								$brand_logo = '';
+
+								if ( function_exists( 'get_field' ) ) {
+									$brand_logo = get_field( 'logo', $brand_term ) ?: get_field( 'brand_logo', $brand_term ) ?: get_field( 'image', $brand_term );
+								}
+
+								$brand_logo_url = '';
+								if ( is_array( $brand_logo ) && ! empty( $brand_logo['url'] ) ) {
+									$brand_logo_url = $brand_logo['url'];
+								} elseif ( is_string( $brand_logo ) ) {
+									$brand_logo_url = $brand_logo;
+								}
+								?>
+								<div class="bu-category-brands__mobile-item bu-brand-marquee-slide" aria-hidden="true">
+									<a class="bu-category-brands__card" href="<?php echo esc_url( $brand_link ); ?>" tabindex="-1">
+										<?php if ( $brand_logo_url ) : ?>
+											<img class="bu-category-brands__logo" src="<?php echo esc_url( $brand_logo_url ); ?>" alt="" loading="lazy" decoding="async" />
+										<?php else : ?>
+											<span class="bu-category-brands__name"><?php echo esc_html( $brand_term->name ); ?></span>
+										<?php endif; ?>
+									</a>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endforeach; ?>
+			</div>
 		</section>
 	<?php endif; ?>
 </main>
@@ -206,6 +298,30 @@ jQuery(function ($) {
   if (!$slider.length) return;
   if (typeof $.fn.slick !== 'function') return;
   if ($slider.hasClass('slick-initialized')) return;
+  var $progressBar = $('.js-bu-category-featured-progress');
+
+  function updateFeaturedProgress(slick, currentSlide) {
+    if (!$progressBar.length || !slick || !slick.slideCount) return;
+
+    var slidesToShow = slick.options.slidesToShow || 1;
+    var totalSteps = Math.max(1, slick.slideCount - slidesToShow + 1);
+    var currentStep = Math.min(totalSteps, (currentSlide || 0) + 1);
+    var progress = (currentStep / totalSteps) * 100;
+
+    $progressBar.css('width', progress + '%');
+  }
+
+  $slider.on('init', function (event, slick) {
+    updateFeaturedProgress(slick, slick.currentSlide || 0);
+  });
+
+  $slider.on('afterChange', function (event, slick, currentSlide) {
+    updateFeaturedProgress(slick, currentSlide);
+  });
+
+  $slider.on('setPosition breakpoint reInit', function (event, slick) {
+    updateFeaturedProgress(slick, slick.currentSlide || 0);
+  });
 
   $slider.slick({
     slidesToShow: 3,
@@ -224,13 +340,19 @@ jQuery(function ($) {
       {
         breakpoint: 991,
         settings: {
-          slidesToShow: 2
+          slidesToShow: 1,
+          centerMode: true,
+          centerPadding: '24px',
+          swipeToSlide: true
         }
       },
       {
         breakpoint: 767,
         settings: {
-          slidesToShow: 1
+          slidesToShow: 1,
+          centerMode: true,
+          centerPadding: '24px',
+          swipeToSlide: true
         }
       }
     ]
@@ -268,38 +390,52 @@ jQuery(function ($) {
   var $slider = $('.js-bu-category-brands-slider');
   if (!$slider.length) return;
   if (typeof $.fn.slick !== 'function') return;
-  if ($slider.hasClass('slick-initialized')) return;
+  var mobileQuery = window.matchMedia('(max-width: 991px)');
 
-  $slider.slick({
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    infinite: true,
-    arrows: false,
-    dots: false,
-    autoplay: true,
-    autoplaySpeed: 2500,
-    speed: 500,
-    responsive: [
-      {
-        breakpoint: 1280,
-        settings: {
-          slidesToShow: 4
-        }
-      },
-      {
-        breakpoint: 991,
-        settings: {
-          slidesToShow: 3
-        }
-      },
-      {
-        breakpoint: 767,
-        settings: {
-          slidesToShow: 2
-        }
+  function syncCategoryBrandsSlider() {
+    if (mobileQuery.matches) {
+      if ($slider.hasClass('slick-initialized')) {
+        $slider.slick('unslick');
       }
-    ]
-  });
+      return;
+    }
+
+    if ($slider.hasClass('slick-initialized')) return;
+
+    $slider.slick({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      infinite: true,
+      arrows: false,
+      dots: false,
+      autoplay: true,
+      autoplaySpeed: 2500,
+      speed: 500,
+      responsive: [
+        {
+          breakpoint: 1280,
+          settings: {
+            slidesToShow: 4
+          }
+        },
+        {
+          breakpoint: 991,
+          settings: {
+            slidesToShow: 3
+          }
+        },
+        {
+          breakpoint: 767,
+          settings: {
+            slidesToShow: 2
+          }
+        }
+      ]
+    });
+  }
+
+  syncCategoryBrandsSlider();
+  window.addEventListener('resize', syncCategoryBrandsSlider);
 });
 </script>
 

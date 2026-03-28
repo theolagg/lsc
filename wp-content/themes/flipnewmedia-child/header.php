@@ -105,31 +105,57 @@
         </div>
 
         <div class="nav-mobile">
-          <div class="offcanvas-grid">
-            <div class="offcanvas-col offcanvas-col-left">
-              <?php
-                wp_nav_menu([
-                  'theme_location' => 'offcanvas_left',
-                  'menu_class'     => 'offcanvas-menu offcanvas-menu-left',
-                  'container'      => false,
-                  'depth'          => 2,
-                  'fallback_cb'    => false,
-                ]);
-              ?>
-            </div>
+          <?php $has_mobile_offcanvas_menus = has_nav_menu( 'offcanvas_left' ) || has_nav_menu( 'offcanvas_right' ); ?>
 
-            <div class="offcanvas-col offcanvas-col-right">
+          <?php if ( $has_mobile_offcanvas_menus ) : ?>
+            <div class="offcanvas-grid">
+              <div class="offcanvas-col offcanvas-col-left">
+                <?php
+                  wp_nav_menu([
+                    'theme_location' => 'offcanvas_left',
+                    'menu_class'     => 'offcanvas-menu offcanvas-menu-left',
+                    'container'      => false,
+                    'depth'          => 2,
+                    'fallback_cb'    => false,
+                  ]);
+                ?>
+              </div>
+
+              <div class="offcanvas-col offcanvas-col-right">
+                <?php
+                  wp_nav_menu([
+                    'theme_location' => 'offcanvas_right',
+                    'menu_class'     => 'offcanvas-menu offcanvas-menu-right',
+                    'container'      => false,
+                    'depth'          => 2,
+                    'fallback_cb'    => false,
+                  ]);
+                ?>
+              </div>
+            </div>
+          <?php else : ?>
+            <div class="mobile-menu-fallback">
               <?php
                 wp_nav_menu([
-                  'theme_location' => 'offcanvas_right',
-                  'menu_class'     => 'offcanvas-menu offcanvas-menu-right',
+                  'theme_location' => 'primary',
+                  'menu_class'     => 'offcanvas-menu mobile-main-menu',
                   'container'      => false,
                   'depth'          => 2,
                   'fallback_cb'    => false,
                 ]);
               ?>
+
+              <?php
+                wp_nav_menu([
+                  'theme_location' => 'header_utility',
+                  'menu_class'     => 'offcanvas-menu mobile-utility-menu',
+                  'container'      => false,
+                  'depth'          => 1,
+                  'fallback_cb'    => false,
+                ]);
+              ?>
             </div>
-          </div>
+          <?php endif; ?>
 
           <div class="offcanvas-social">
             <a class="social-btn" href="https://www.facebook.com/digitalwallypass" aria-label="Facebook"><svg width="13" height="20" viewBox="0 0 13 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -204,7 +230,14 @@
   }
 
   function syncNavState(){
-    if (isMobile() && !document.body.classList.contains('nav-open')) {
+    if (!isMobile()) {
+      document.body.classList.remove('nav-open');
+      nav.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    if (!document.body.classList.contains('nav-open')) {
       nav.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
       return;
@@ -311,6 +344,7 @@
 (function () {
   const TOGGLER_ZONE_WIDTH = 44;
   const ROOT = document;
+  const MOBILE_BREAKPOINT = '(max-width: 991px)';
 
   function setupOffcanvasAccordion() {
 	   if (window.matchMedia('(max-width: 991px)').matches) return;
