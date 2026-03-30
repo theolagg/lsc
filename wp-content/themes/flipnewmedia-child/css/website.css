@@ -1013,7 +1013,7 @@ p {
 #masthead .header-shell {
   display: flex;
   align-items: center;
-  gap: 56px;
+  gap: 3%;
   background: rgba(255, 255, 255, 0.57);
   border-radius: 16px;
   border: 0;
@@ -1058,7 +1058,7 @@ p {
   display: flex;
   align-items: center;
   flex: 1 1 auto;
-  gap: 24px;
+  gap: 2%;
 }
 
 #masthead .nav-desktop {
@@ -1198,7 +1198,6 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
 }
 
 #masthead .header-search-form {
@@ -4873,7 +4872,6 @@ body.bu-products-modal-open {
   height: 429px;
   border-radius: 15px;
   overflow: hidden;
-  box-shadow: 0 0 63.1px rgba(0, 0, 0, 0.1);
   background: #fff;
   isolation: isolate;
 }
@@ -6477,6 +6475,10 @@ body.bu-products-modal-open {
     gap: 46px;
   }
 
+  .lsc-footer__newsletter-row {
+    grid-template-columns: 1fr !important;
+  }
+
   .bu-product-hero__content {
     padding-top: 3px;
   }
@@ -6851,7 +6853,8 @@ body.bu-products-modal-open {
     display: none;
   }
 
-  .bu-products-hero.is-mobile-expanded .bu-products-hero__column--mobile-hidden {
+  .bu-products-hero.is-mobile-expanded
+    .bu-products-hero__column--mobile-hidden {
     display: grid;
   }
 
@@ -7841,7 +7844,7 @@ body.bu-products-modal-open {
 }
 
 .lsc-chemilab-story__arrow--prev {
-  left: calc(-5vw - 30px);
+  left: calc(-5vw - 40px);
   transform: translate(-10%, -70%);
 }
 
@@ -8291,7 +8294,7 @@ body.bu-products-modal-open {
 }
 
 .lsc-footer__newsletter {
-  width: min(calc(100% - 304px), 1817px);
+  width: min(calc(100% - 10%), 1817px);
   margin-right: auto;
   background: transparent;
   padding: 58px 0 50px;
@@ -11090,7 +11093,11 @@ body:not(.home):not(.page-template-views-home-php):not(
   .single-post-hero__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(246, 247, 245, 0) 0%, #fbfbfb 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(246, 247, 245, 0) 0%,
+      #fbfbfb 100%
+    );
   }
 
   .single-post-hero__title {
@@ -11246,7 +11253,11 @@ body:not(.home):not(.page-template-views-home-php):not(
   .career-archive__hero .contact-hero__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(246, 247, 245, 0) 0%, #fbfbfb 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(246, 247, 245, 0) 0%,
+      #fbfbfb 100%
+    );
   }
 
   .career-archive__hero .contact-hero__header {
@@ -11333,7 +11344,11 @@ body:not(.home):not(.page-template-views-home-php):not(
   .single-career__hero .contact-hero__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(246, 247, 245, 0) 0%, #fbfbfb 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(246, 247, 245, 0) 0%,
+      #fbfbfb 100%
+    );
   }
 
   .single-career__hero .contact-hero__title {
@@ -11613,7 +11628,9 @@ body:not(.home):not(.page-template-views-home-php):not(
     display: none;
   }
 
-  .strategic-partners-template .home-partners-media.is-cursor-active .home-partners-more {
+  .strategic-partners-template
+    .home-partners-media.is-cursor-active
+    .home-partners-more {
     opacity: 0;
     transform: none;
   }
@@ -11652,7 +11669,9 @@ body:not(.home):not(.page-template-views-home-php):not(
   }
 
   .strategic-partners-template .home-partners-slider .slick-arrow:hover,
-  .strategic-partners-template .home-partners-slider .slick-arrow:focus-visible {
+  .strategic-partners-template
+    .home-partners-slider
+    .slick-arrow:focus-visible {
     background: rgba(255, 255, 255, 0.58);
     color: inherit;
     transform: none;
@@ -12174,7 +12193,7 @@ body:not(.home):not(.page-template-views-home-php):not(
   }
 
   .bu-products-latest__slider .slick-list {
-    padding: 0 24px !important;
+    padding: 0 30px !important;
   }
 
   .bu-products-latest__slide {
@@ -12271,7 +12290,11 @@ body:not(.home):not(.page-template-views-home-php):not(
     left: 0;
     top: 168px;
     height: 208px;
-    background: linear-gradient(180deg, rgba(251, 251, 251, 0) 0%, #fbfbfb 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(251, 251, 251, 0) 0%,
+      #fbfbfb 100%
+    );
     pointer-events: none;
     z-index: 1;
   }
@@ -12421,7 +12444,11 @@ body:not(.home):not(.page-template-views-home-php):not(
     left: 0;
     top: 168px;
     height: 208px;
-    background: linear-gradient(180deg, rgba(251, 251, 251, 0) 0%, #fbfbfb 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(251, 251, 251, 0) 0%,
+      #fbfbfb 100%
+    );
     pointer-events: none;
     z-index: 1;
   }
