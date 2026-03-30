@@ -343,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function () {
     heroMoreButton.addEventListener('click', function () {
       heroSection.classList.add('is-mobile-expanded');
       heroMoreButton.setAttribute('aria-expanded', 'true');
+      heroMoreButton.disabled = true;
     });
   }
 

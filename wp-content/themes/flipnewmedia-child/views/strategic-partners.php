@@ -116,6 +116,7 @@ if ( empty( $logo_items ) ) {
 
 $logos_more_label = function_exists( 'get_field' ) ? ( get_field( 'sp_logos_more_label' ) ?: 'Περισσότερα' ) : 'Περισσότερα';
 $logos_more_url   = function_exists( 'get_field' ) ? ( get_field( 'sp_logos_more_url' ) ?: '#' ) : '#';
+$has_mobile_logo_overflow = count( $logo_items ) > 8;
 ?>
 
 <main id="primary" class="site-main strategic-partners-template">
@@ -167,15 +168,29 @@ $logos_more_url   = function_exists( 'get_field' ) ? ( get_field( 'sp_logos_more
   <?php endif; ?>
 
   <?php if ( ! empty( $logo_items ) ) : ?>
-    <section class="strategic-partners-logos figma-node-711-215" data-node-id="711:215" aria-label="<?php esc_attr_e( 'Strategic partners logos', 'flipnewmedia' ); ?>">
+    <section class="strategic-partners-logos figma-node-711-215<?php echo $has_mobile_logo_overflow ? ' is-mobile-collapsible' : ''; ?>" data-node-id="711:215" aria-label="<?php esc_attr_e( 'Strategic partners logos', 'flipnewmedia' ); ?>">
       <div class="container-ext">
-        <div class="strategic-partners-logos__grid">
+        <div class="strategic-partners-logos__grid" id="strategic-partners-logos-grid">
           <?php foreach ( $logo_items as $index => $logo_url ) : ?>
-            <div class="strategic-partners-logos__item" data-node-id="<?php echo esc_attr( '711:215-' . $index ); ?>">
+            <div class="strategic-partners-logos__item<?php echo $index >= 8 ? ' strategic-partners-logos__item--mobile-hidden' : ''; ?>" data-node-id="<?php echo esc_attr( '711:215-' . $index ); ?>">
               <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php esc_attr_e( 'Strategic partner logo', 'flipnewmedia' ); ?>" loading="lazy" decoding="async" />
             </div>
           <?php endforeach; ?>
         </div>
+
+        <?php if ( $has_mobile_logo_overflow ) : ?>
+          <div class="strategic-partners-logos__mobile-more">
+            <button
+              class="strategic-partners-logos__mobile-more-btn"
+              type="button"
+              data-strategic-logos-more
+              aria-expanded="false"
+              aria-controls="strategic-partners-logos-grid"
+            >
+              <?php echo esc_html( $logos_more_label ); ?>
+            </button>
+          </div>
+        <?php endif; ?>
 
         <?php if ( $logos_more_label ) : ?>
           <div class="strategic-partners-logos__cta">
@@ -200,6 +215,17 @@ $logos_more_url   = function_exists( 'get_field' ) ? ( get_field( 'sp_logos_more
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var logosSection = document.querySelector('.strategic-partners-logos.is-mobile-collapsible');
+  var logosMoreButton = logosSection ? logosSection.querySelector('[data-strategic-logos-more]') : null;
+
+  if (logosSection && logosMoreButton) {
+    logosMoreButton.addEventListener('click', function () {
+      logosSection.classList.add('is-mobile-expanded');
+      logosMoreButton.setAttribute('aria-expanded', 'true');
+      logosMoreButton.disabled = true;
+    });
+  }
+
   if (typeof window.jQuery === 'undefined') {
     return;
   }
